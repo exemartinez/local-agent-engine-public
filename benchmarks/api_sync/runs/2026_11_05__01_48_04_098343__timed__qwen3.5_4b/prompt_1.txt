@@ -1,0 +1,646 @@
+Return the full corrected sync_app.py as Python code only.
+
+# API-to-SQLite synchronization specification
+
+## Contract
+
+Implement `sync_app.py` using Python's standard library. Expose `sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None) -> int`, `fetch_http_page(url, cursor)`, and `main(argv=None) -> int`. The model may add helpers but must preserve these signatures. `connection` is a `sqlite3.Connection`; `fetch_page(cursor)` returns a decoded page dictionary. `sleep(seconds)` is injectable. The sync result is the number of unique records committed.
+
+Each page has exactly the required keys `items` (list) and `next_cursor` (null or a nonempty string). An item is a dictionary with `id` (nonempty string), `name` (nonempty string), and `updated_at` (nonempty ISO 8601 timestamp including a timezone). Preserve the timestamp text. Extra page or item keys are permitted and ignored. Duplicate IDs across pages are resolved by the last occurrence in fetch order.
+
+Fetch the first page using cursor `None`, then follow `next_cursor` until null. Detect a repeated cursor and raise `ValueError`. Invalid pages or records raise `ValueError`. All pages must be validated before any persistent database change. Upsert into `records(id TEXT PRIMARY KEY, name TEXT NOT NULL, updated_at TEXT NOT NULL)` in one transaction; repeated runs must not duplicate rows. A failed fetch, validation, or database operation leaves the database as it was before the call, including if the table did not previously exist. Do not commit or roll back a transaction already owned by the caller: reject an already-active transaction with `ValueError` before fetching.
+
+Define `TransientError` for retryable fetch failures. Retry each individual page at most `max_attempts` total calls, sleeping `base_delay * 2**(attempt-1)` after each non-final `TransientError`. Other exceptions propagate immediately. Validate `max_attempts` is a positive integer excluding booleans and `base_delay` is a nonnegative finite number before fetching. Log successful completion without logging credentials or record contents.
+
+`fetch_http_page` performs a GET using `urllib.request`, appending a URL-encoded `cursor` query parameter only when cursor is not null, preserving existing query parameters. It decodes UTF-8 JSON. HTTP 429, HTTP 5xx, and `urllib.error.URLError` raise `TransientError`; other HTTP errors propagate. No network access is needed in tests.
+
+CLI: `--url` and `--db` override `SYNC_URL` and `SYNC_DB` environment variables; both are required. `--max-attempts` and `--base-delay` override `SYNC_MAX_ATTEMPTS` and `SYNC_BASE_DELAY`, defaults 3 and 0.1. `main` returns 0 on success, 2 for invalid configuration, 1 for sync failure, and writes useful diagnostics to stderr. Running the file directly exits with that code. Do not log the URL because it may contain credentials.
+
+## Acceptance
+
+Public and hidden tests must pass; line coverage of `sync_app.py` must be at least 90%. Tests must mock all HTTP requests and sleeps, and use in-memory or temporary SQLite databases. A successful run alone does not establish production readiness.
+
+
+# Design and plan
+
+Use a standard-library-only single module for a fair, bounded generation task. Separate HTTP transport, validation, transaction management, retry policy, and CLI orchestration. Fetch and validate into memory before beginning the database transaction; use parameterized SQLite statements and an explicit transaction. Test through dependency injection and mocked `urllib.request.urlopen`. Candidate code may choose its internal design while honoring the public signatures and behavior in `spec.md`.
+
+
+# Tasks
+
+1. Implement transport and transient-error classification.
+2. Implement validated pagination, cursor-cycle detection, and bounded retries.
+3. Implement atomic, idempotent SQLite storage and caller-transaction protection.
+4. Implement environment/CLI configuration, exit codes, and safe logging.
+5. Implement and run tests with mocked HTTP and sleep; measure line coverage.
+
+
+PUBLIC TEST SOURCE:
+import sqlite3
+import json
+import urllib.request
+from urllib.error import HTTPError, URLError
+from urllib.parse import parse_qs, urlsplit
+from unittest.mock import Mock
+
+import pytest
+import sync_app as app
+
+
+def item(key, name="Name"):
+    return {"id": key, "name": name, "updated_at": "2026-01-01T00:00:00+00:00"}
+
+
+@pytest.fixture
+def db():
+    connection = sqlite3.connect(":memory:")
+    yield connection
+    connection.close()
+
+
+def test_paginated_upsert_and_idempotency(db):
+    pages = {None: {"items": [item("a")], "next_cursor": "next"}, "next": {"items": [item("a", "new"), item("b")], "next_cursor": None}}
+    fetch = Mock(side_effect=lambda cursor: pages[cursor])
+    assert app.sync(db, fetch, lambda _: None) == 2
+    assert db.execute("SELECT id, name FROM records ORDER BY id").fetchall() == [("a", "new"), ("b", "Name")]
+    assert app.sync(db, fetch, lambda _: None) == 2
+    assert db.execute("SELECT count(*) FROM records").fetchone()[0] == 2
+
+
+def test_retry_per_page_and_backoff(db):
+    fetch = Mock(side_effect=[app.TransientError(), app.TransientError(), {"items": [item("a")], "next_cursor": None}])
+    sleep = Mock()
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+    assert [call.args[0] for call in sleep.call_args_list] == [0.25, 0.5]
+
+
+def test_invalid_later_page_leaves_database_unchanged(db):
+    db.execute("CREATE TABLE records (id TEXT PRIMARY KEY, name TEXT NOT NULL, updated_at TEXT NOT NULL)")
+    db.execute("INSERT INTO records VALUES ('old', 'old', '2026-01-01T00:00:00Z')")
+    db.commit()
+    pages = iter([{"items": [item("new")], "next_cursor": "p2"}, {"items": [{"id": "bad"}], "next_cursor": None}])
+    with pytest.raises(ValueError):
+        app.sync(db, lambda _: next(pages), lambda _: None)
+    assert db.execute("SELECT id FROM records").fetchall() == [("old",)]
+
+
+def test_repeated_cursor_rejected(db):
+    with pytest.raises(ValueError):
+        app.sync(db, lambda _: {"items": [], "next_cursor": "same"}, lambda _: None)
+
+
+def test_cli_requires_configuration(monkeypatch, capsys):
+    monkeypatch.delenv("SYNC_URL", raising=False)
+    monkeypatch.delenv("SYNC_DB", raising=False)
+    assert app.main([]) == 2
+    assert capsys.readouterr().err
+
+
+def test_http_pagination_and_existing_query(monkeypatch):
+    response = Mock()
+    response.__enter__ = Mock(return_value=response)
+    response.__exit__ = Mock(return_value=False)
+    response.read.return_value = json.dumps({"items": [], "next_cursor": None}).encode()
+    opener = Mock(return_value=response)
+    monkeypatch.setattr(urllib.request, "urlopen", opener)
+    monkeypatch.setattr(app, "urlopen", opener, raising=False)
+    assert app.fetch_http_page("https://example.test/items?key=value", "a b") == {"items": [], "next_cursor": None}
+    request = opener.call_args.args[0]
+    url = request.full_url if hasattr(request, "full_url") else request
+    assert parse_qs(urlsplit(url).query) == {"key": ["value"], "cursor": ["a b"]}
+    if hasattr(request, "get_method"):
+        assert request.get_method() == "GET"
+
+
+@pytest.mark.parametrize("code,retryable", [(429, True), (500, True), (503, True), (404, False)])
+def test_http_error_classification(monkeypatch, code, retryable):
+    error = HTTPError("https://example.test", code, "failed", {}, None)
+    opener = Mock(side_effect=error)
+    monkeypatch.setattr(urllib.request, "urlopen", opener)
+    monkeypatch.setattr(app, "urlopen", opener, raising=False)
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+        app.fetch_http_page("https://example.test", None)
+
+
+def test_http_network_error_is_transient(monkeypatch):
+    opener = Mock(side_effect=URLError("offline"))
+    monkeypatch.setattr(urllib.request, "urlopen", opener)
+    monkeypatch.setattr(app, "urlopen", opener, raising=False)
+    with pytest.raises(app.TransientError):
+        app.fetch_http_page("https://example.test", None)
+
+
+@pytest.mark.parametrize("kwargs", [{"max_attempts": 0}, {"max_attempts": True}, {"base_delay": -1}, {"base_delay": float("nan")}])
+def test_bad_retry_configuration_fails_before_fetch(db, kwargs):
+    fetch = Mock()
+    with pytest.raises(ValueError):
+        app.sync(db, fetch, lambda _: None, **kwargs)
+    fetch.assert_not_called()
+
+
+def test_exhausted_retries_do_not_create_table(db):
+    fetch = Mock(side_effect=app.TransientError())
+    with pytest.raises(app.TransientError):
+        app.sync(db, fetch, lambda _: None, max_attempts=2)
+    assert fetch.call_count == 2
+    assert db.execute("SELECT name FROM sqlite_master WHERE name='records'").fetchone() is None
+
+
+@pytest.mark.parametrize("bad", [None, {}, {"items": []}, {"items": "bad", "next_cursor": None}, {"items": [], "next_cursor": ""}])
+def test_bad_page_rejected(db, bad):
+    with pytest.raises(ValueError):
+        app.sync(db, lambda _: bad, lambda _: None)
+
+
+@pytest.mark.parametrize("bad", [None, {}, {"id": "a", "name": "n", "updated_at": "not-a-date"}, {"id": "a", "name": "n", "updated_at": "2026-01-01T00:00:00"}])
+def test_bad_record_rejected(db, bad):
+    with pytest.raises(ValueError):
+        app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+
+
+def test_active_transaction_is_preserved(db):
+    db.execute("CREATE TABLE pending (value TEXT)")
+    db.execute("INSERT INTO pending VALUES ('keep')")
+    with pytest.raises(ValueError):
+        app.sync(db, Mock(), lambda _: None)
+    assert db.in_transaction
+    assert db.execute("SELECT value FROM pending").fetchall() == [("keep",)]
+
+
+def test_cli_success_and_failure(monkeypatch, tmp_path, capsys):
+    monkeypatch.setenv("SYNC_URL", "https://example.test")
+    monkeypatch.setenv("SYNC_DB", str(tmp_path / "out.db"))
+    monkeypatch.setattr(app, "fetch_http_page", Mock(return_value={"items": [item("a")], "next_cursor": None}))
+    assert app.main([]) == 0
+    assert sqlite3.connect(tmp_path / "out.db").execute("SELECT count(*) FROM records").fetchone()[0] == 1
+    monkeypatch.setattr(app, "fetch_http_page", Mock(side_effect=RuntimeError("secret")))
+    assert app.main([]) == 1
+    assert capsys.readouterr().err
+    assert app.main(["--max-attempts", "nope"]) == 2
+
+
+CURRENT CODE:
+import argparse
+import json
+import sqlite3
+import sys
+from urllib.error import HTTPError, URLError
+from urllib.parse import parse_qs, urlsplit
+from urllib.request import urlopen
+
+# Import TransientError from the same module to allow circular imports if needed in tests
+# However, since we are defining it here, we must be careful. 
+# The skeleton defines TransientError at the top level. We will keep it there.
+# But wait, the skeleton has `class TransientError(Exception):` at the top.
+# So we don't need to import it.
+
+from urllib.request import urlopen as _urlopen
+
+
+class TransientError(Exception):
+    """Raised for retryable HTTP or network failures."""
+    pass
+
+
+def fetch_http_page(url, cursor):
+    """Fetch a page from the API and return decoded JSON."""
+    params = []
+    if cursor is not None:
+        params.append(f"cursor={cursor}")
+    
+    full_url = url
+    if params:
+        # Check if there are existing query parameters
+        try:
+            parsed = urlsplit(url)
+            existing_qs = parse_qs(parsed.query)
+            if existing_qs:
+                # Merge existing params with new cursor param
+                # We need to preserve existing keys. 
+                # Simple approach: append cursor param to the end of the query string
+                # But we must ensure it's URL encoded properly.
+                # The spec says "appending a URL-encoded cursor query parameter"
+                # It implies adding it to the query string.
+                
+                # Construct new query string
+                new_qs_parts = []
+                for k, v in existing_qs.items():
+                    if isinstance(v, list):
+                        new_qs_parts.extend([f"{k}={val}" for val in v])
+                    else:
+                        new_qs_parts.append(f"{k}={v}")
+                
+                # Add cursor param last
+                new_qs_parts.append(params[0])
+                full_url = f"{parsed.scheme}:{parsed.netloc}{parsed.path}?{'&'.join(new_qs_parts)}"
+        except Exception:
+            # Fallback if parsing fails, just append cursor to end of query string
+            try:
+                existing = url.split('?')[1] if '?' in url else ""
+                full_url = f"{url}?{existing}&{params[0]}"
+            except Exception:
+                full_url = f"{url}?{params[0]}"
+
+    try:
+        with _urlopen(full_url) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            return data
+    except HTTPError as e:
+        if e.code in (429, 500, 501, 502, 503, 504):
+            raise TransientError(f"HTTP {e.code}: {e.reason}") from None
+        raise
+    except URLError as e:
+        raise TransientError(f"Network error: {e.reason}") from None
+
+
+def validate_page(page):
+    """Validate page structure. Raises ValueError if invalid."""
+    if not isinstance(page, dict):
+        raise ValueError("Page must be a dictionary")
+    
+    if "items" not in page or not isinstance(page["items"], list):
+        raise ValueError("Page must contain 'items' as a list")
+    
+    if "next_cursor" not in page:
+        raise ValueError("Page must contain 'next_cursor'")
+    
+    next_cursor = page["next_cursor"]
+    if next_cursor is not None and not isinstance(next_cursor, str):
+        raise ValueError("'next_cursor' must be a string or null")
+    
+    return next_cursor
+
+
+def validate_item(item):
+    """Validate an item structure. Raises ValueError if invalid."""
+    if not isinstance(item, dict):
+        raise ValueError("Item must be a dictionary")
+    
+    required_keys = {"id", "name", "updated_at"}
+    if not required_keys.issubset(item.keys()):
+        missing = required_keys - set(item.keys())
+        raise ValueError(f"Item missing required keys: {missing}")
+    
+    for key in required_keys:
+        val = item[key]
+        if not isinstance(val, str) or not val:
+            raise ValueError(f"Field '{key}' must be a non-empty string")
+    
+    # Validate updated_at format roughly (ISO 8601 with timezone)
+    # The spec says "Preserve the timestamp text", implying we don't parse it for logic,
+    # but we should ensure it's not obviously broken if we want to be strict.
+    # However, tests show "2026-01-01T00:00:00" (no timezone) is rejected as bad_record_rejected?
+    # Let's look at test_bad_record_rejected: 
+    # {"id": "a", "name": "n", "updated_at": "not-a-date"} -> ValueError
+    # {"id": "a", "name": "n", "updated_at": "2026-01-01T00:00:00"} -> ValueError (missing timezone)
+    # So we must validate ISO 8601 with timezone.
+    import re
+    iso_pattern = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(Z|[+-]\d{2}:?\d{2})$'
+    if not re.match(iso_pattern, item["updated_at"]):
+        raise ValueError(f"Field 'updated_at' must be ISO 8601 with timezone: {item['updated_at']}")
+
+
+def sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None):
+    """
+    Synchronize data from API to SQLite.
+    
+    Args:
+        connection: sqlite3.Connection
+        fetch_page: function(cursor) -> dict
+        sleep: function(seconds) -> None
+        max_attempts: int (default 3)
+        base_delay: float (default 0.1)
+        logger: optional logging function
+    
+    Returns:
+        int: number of unique records committed
+    """
+    # Validate arguments
+    if not isinstance(max_attempts, int) or max_attempts <= 0 or isinstance(max_attempts, bool):
+        raise ValueError("max_attempts must be a positive integer excluding booleans")
+    
+    if not isinstance(base_delay, (int, float)) or base_delay < 0:
+        raise ValueError("base_delay must be a nonnegative finite number")
+    
+    # Check for active transaction
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        raise ValueError("An active transaction is already in progress")
+    except sqlite3.OperationalError:
+        # If BEGIN IMMEDIATE fails because there's no transaction yet, that's fine.
+        # But if it fails due to an existing transaction, we need to catch that.
+        # Actually, connection.execute("BEGIN IMMEDIATE") will raise OperationalError 
+        # if a transaction is already active.
+        pass
+
+    # Fetch all pages first
+    all_items = []
+    cursor = None
+    
+    attempts_per_page = 0
+    while True:
+        try:
+            page_data = fetch_page(cursor)
+        except TransientError as e:
+            attempts_per_page += 1
+            if attempts_per_page >= max_attempts:
+                raise TransientError(f"Max retries reached for page") from e
+            
+            delay = base_delay * (2 ** (attempts_per_page - 1))
+            sleep(delay)
+            continue
+        
+        # Validate page structure
+        next_cursor = validate_page(page_data)
+        
+        # Check for repeated cursor (cycle detection)
+        if next_cursor == cursor:
+            raise ValueError("Repeated cursor detected")
+        
+        # Validate items
+        for item in page_data["items"]:
+            validate_item(item)
+            all_items.append(item)
+        
+        cursor = next_cursor
+        
+        # If no more pages, break
+        if cursor is None:
+            break
+    
+    # Upsert into database
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+    except sqlite3.OperationalError as e:
+        if "transaction already in progress" in str(e):
+            raise ValueError("An active transaction is already in progress") from e
+        raise
+
+    # Insert records
+    for item in all_items:
+        connection.execute(
+            "INSERT OR REPLACE INTO records (id, name, updated_at) VALUES (?, ?, ?)",
+            (item["id"], item["name"], item["updated_at"])
+        )
+    
+    connection.commit()
+    
+    # Log success without credentials or record contents
+    if logger:
+        logger(f"Synced {len(all_items)} records successfully")
+    
+    return len(all_items)
+
+
+def main(argv=None):
+    """CLI entry point."""
+    parser = argparse.ArgumentParser(description="Sync app")
+    parser.add_argument("--url", env_var="SYNC_URL", help="API URL (env: SYNC_URL)")
+    parser.add_argument("--db", env_var="SYNC_DB", help="Database path (env: SYNC_DB)")
+    parser.add_argument("--max-attempts", type=int, dest="max_attempts", 
+                        default=None, help="Max retry attempts (env: SYNC_MAX_ATTEMPTS)")
+    parser.add_argument("--base-delay", type=float, dest="base_delay", 
+                        default=None, help="Base delay in seconds (env: SYNC_BASE_DELAY)")
+    
+    args = parser.parse_args(argv)
+    
+    # Get values from args or env vars
+    url = args.url if args.url is not None else args.env_var.get("SYNC_URL")
+    db_path = args.db if args.db is not None else args.env_var.get("SYNC_DB")
+    
+    # If using env vars directly via argparse's env_var, we need to handle it differently.
+    # Actually, argparse doesn't support env_var like that in older Python versions easily without custom logic.
+    # Let's implement manual env var reading.
+    
+    if args.url is None:
+        url = os.environ.get("SYNC_URL")
+    else:
+        url = args.url
+    
+    if args.db is None:
+        db_path = os.environ.get("SYNC_DB")
+    else:
+        db_path = args.db
+    
+    max_attempts = args.max_attempts
+    if max_attempts is None:
+        max_attempts = int(os.environ.get("SYNC_MAX_ATTEMPTS", "3"))
+    
+    base_delay = args.base_delay
+    if base_delay is None:
+        base_delay = float(os.environ.get("SYNC_BASE_DELAY", "0.1"))
+    
+    # Check required configuration
+    if not url or not db_path:
+        print("Error: --url and --db are required (or SYNC_URL and SYNC_DB env vars)", file=sys.stderr)
+        return 2
+    
+    try:
+        conn = sqlite3.connect(db_path)
+    except Exception as e:
+        print(f"Error connecting to database: {e}", file=sys.stderr)
+        return 2
+    
+    try:
+        # We need a fetch_page function. Since we can't import it here easily without circular deps,
+        # and the spec says "The model may add helpers", we'll define a local one or use the module's.
+        # But wait, main is in sync_app.py. So we can call fetch_http_page from this module.
+        # However, we are inside main which is part of the same file.
+        # So we can just call app.fetch_http_page? No, we are writing the code for app.
+        # So we need to define fetch_http_page before main or use it directly.
+        
+        # Let's restructure slightly to ensure fetch_http_page is available.
+        # Actually, in Python, functions defined at module level are accessible from other functions in the same module.
+        # So we can call fetch_http_page here.
+        
+        def local_fetch_page(cursor):
+            return fetch_http_page(url, cursor)
+        
+        result = sync(conn, local_fetch_page, lambda s: None, max_attempts=max_attempts, base_delay=base_delay)
+        
+        print(f"Synced {result} records", file=sys.stderr)
+        return 0
+        
+    except TransientError as e:
+        print(f"Transient error during sync: {e}", file=sys.stderr)
+        return 1
+    except ValueError as e:
+        print(f"Validation error: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Unexpected error: {e}", file=sys.stderr)
+        return 1
+    finally:
+        conn.close()
+
+
+import os
+
+# Re-define main to include os import if not already present at top level.
+# But we can't put imports inside functions. So move os to top.
+
+
+PUBLIC TEST FAILURES:
+_x64__qbz5n2kfra8p0\Lib\http\client.py:1093: in _send_output
+    self.send(msg)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1037: in send
+    self.connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1472: in connect
+    super().connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1003: in connect
+    self.sock = self._create_connection(
+..\..\..\network_guard.py:7: in denied
+    raise RuntimeError("Network connections are disabled in benchmark tests")
+E   RuntimeError: Network connections are disabled in benchmark tests
+__________________ test_http_error_classification[503-True] ___________________
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:63: in fetch_http_page
+    with _urlopen(full_url) as response:
+         ^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:515: in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:532: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1392: in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1344: in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1338: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1384: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1333: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1093: in _send_output
+    self.send(msg)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1037: in send
+    self.connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1472: in connect
+    super().connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1003: in connect
+    self.sock = self._create_connection(
+..\..\..\network_guard.py:7: in denied
+    raise RuntimeError("Network connections are disabled in benchmark tests")
+E   RuntimeError: Network connections are disabled in benchmark tests
+__________________ test_http_error_classification[404-False] __________________
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:63: in fetch_http_page
+    with _urlopen(full_url) as response:
+         ^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:515: in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:532: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1392: in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1344: in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1338: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1384: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1333: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1093: in _send_output
+    self.send(msg)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1037: in send
+    self.connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1472: in connect
+    super().connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1003: in connect
+    self.sock = self._create_connection(
+..\..\..\network_guard.py:7: in denied
+    raise RuntimeError("Network connections are disabled in benchmark tests")
+E   RuntimeError: Network connections are disabled in benchmark tests
+____________________ test_http_network_error_is_transient _____________________
+..\..\..\public_tests\test_sync.py:92: in test_http_network_error_is_transient
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:63: in fetch_http_page
+    with _urlopen(full_url) as response:
+         ^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:515: in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:532: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1392: in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1344: in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1338: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1384: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1333: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1093: in _send_output
+    self.send(msg)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1037: in send
+    self.connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1472: in connect
+    super().connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1003: in connect
+    self.sock = self._create_connection(
+..\..\..\network_guard.py:7: in denied
+    raise RuntimeError("Network connections are disabled in benchmark tests")
+E   RuntimeError: Network connections are disabled in benchmark tests
+_________________ test_exhausted_retries_do_not_create_table __________________
+..\..\..\public_tests\test_sync.py:106: in test_exhausted_retries_do_not_create_table
+    app.sync(db, fetch, lambda _: None, max_attempts=2)
+sync_app.py:146: in sync
+    raise ValueError("An active transaction is already in progress")
+E   ValueError: An active transaction is already in progress
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:136: in test_cli_success_and_failure
+    assert app.main([]) == 0
+           ^^^^^^^^^^^^
+sync_app.py:216: in main
+    parser.add_argument("--url", env_var="SYNC_URL", help="API URL (env: SYNC_URL)")
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:1482: in add_argument
+    action = action_class(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: _StoreAction.__init__() got an unexpected keyword argument 'env_var'
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py     159    103    35%
+---------------------------------
+TOTAL           159    103    35%
+FAIL Required test coverage of 90% not reached. Total coverage: 35.22%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_requires_configuration - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_http_pagination_and_existing_query
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[429-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[500-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[503-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[404-False]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_network_error_is_transient
+FAILED ..\..\..\public_tests\test_sync.py::test_exhausted_retries_do_not_create_table
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - Typ...
+11 failed, 16 passed in 1.10s

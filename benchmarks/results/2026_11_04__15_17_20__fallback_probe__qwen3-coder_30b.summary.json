@@ -1,0 +1,26 @@
+﻿{
+    "model":  "qwen3-coder:30b",
+    "context":  2048,
+    "output_cap":  256,
+    "ttft_deadline_s":  60,
+    "completion_deadline_s":  180,
+    "elapsed_s":  50.972,
+    "first_token_seen":  true,
+    "stop_reason":  null,
+    "probe_result":  {
+                         "status":  "ok",
+                         "model":  "qwen3-coder:30b",
+                         "context":  2048,
+                         "cap":  256,
+                         "ttft_s":  45.73971799999708,
+                         "e2e_s":  49.18100470000354,
+                         "actual_input_tokens":  41,
+                         "actual_output_tokens":  33,
+                         "generated_tokens_s":  9.557355427622149,
+                         "done_reason":  "stop",
+                         "response":  "def clamp(value, lower, upper):\n    \"\"\"Return value bounded to inclusive [lower, upper].\"\"\"\n    return max(lower, min(upper, value))"
+                     },
+    "sample_csv":  "C:\\workspace\\local-agent-engine\\benchmarks\\results\\2026_11_04__15_17_20__fallback_probe__qwen3-coder_30b.samples.csv",
+    "stdout_log":  "C:\\workspace\\local-agent-engine\\benchmarks\\logs\\2026_11_04__15_17_20__fallback_probe__qwen3-coder_30b.stdout.log",
+    "stderr_log":  "C:\\workspace\\local-agent-engine\\benchmarks\\logs\\2026_11_04__15_17_20__fallback_probe__qwen3-coder_30b.stderr.log"
+}

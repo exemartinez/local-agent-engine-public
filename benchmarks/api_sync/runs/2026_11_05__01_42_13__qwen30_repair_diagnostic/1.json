@@ -1,0 +1,37 @@
+{
+  "request": {
+    "model": "qwen3-coder:30b",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Return only corrected Python code. Current code: def add_one(x): return x + 1\nTest failure: add_one(2) returned 3 but should return 5. Change function to add 3."
+      }
+    ],
+    "stream": false,
+    "options": {
+      "num_ctx": 2048,
+      "num_predict": 100,
+      "temperature": 0,
+      "seed": 42
+    },
+    "keep_alive": "2m"
+  },
+  "response": {
+    "model": "qwen3-coder:30b",
+    "created_at": "2026-11-05T04:42:21.9550106Z",
+    "message": {
+      "role": "assistant",
+      "content": "def add_one(x): return x + 3"
+    },
+    "done": true,
+    "done_reason": "stop",
+    "total_duration": 1360183900,
+    "load_duration": 6735700,
+    "prompt_eval_count": 52,
+    "prompt_eval_cached_count": 38,
+    "prompt_eval_duration": 373605000,
+    "eval_count": 11,
+    "eval_duration": 975415000
+  },
+  "seconds": 1.360000000000582
+}

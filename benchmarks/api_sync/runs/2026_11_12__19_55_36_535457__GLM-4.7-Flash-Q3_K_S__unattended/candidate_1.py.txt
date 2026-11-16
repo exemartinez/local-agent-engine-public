@@ -1,0 +1,235 @@
+import sqlite3
+import urllib.request
+import urllib.error
+import urllib.parse
+import json
+import logging
+import sys
+import os
+import time
+import math
+import argparse
+import re
+from typing import Any, Dict, List, Optional, Callable
+
+# Define the custom exception for transient errors
+class TransientError(Exception):
+    pass
+
+def fetch_http_page(url: str, cursor: Optional[str]) -> Dict[str, Any]:
+    """
+    Performs a GET request to the given URL with an optional cursor.
+    Returns the decoded JSON response.
+    Raises TransientError for 429, 5xx, and URLError.
+    """
+    req = urllib.request.Request(url)
+    
+    # Append cursor query parameter if not null
+    if cursor is not None:
+        # Parse existing query parameters
+        parsed = urllib.parse.urlparse(url)
+        query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+        query['cursor'] = [cursor]
+        # Reconstruct URL with new query string
+        new_url = parsed._replace(query=urllib.parse.urlencode(query, doseq=True)).geturl()
+        req = urllib.request.Request(new_url)
+
+    try:
+        with urllib.request.urlopen(req) as response:
+            data = response.read().decode('utf-8')
+            return json.loads(data)
+    except urllib.error.HTTPError as e:
+        # Retryable status codes: 429, 5xx
+        if e.code in (429, 500, 502, 503):
+            raise TransientError(f"HTTP {e.code}")
+        # Other HTTP errors propagate immediately
+        raise
+    except urllib.error.URLError:
+        raise TransientError("Network error")
+
+def sync(
+    connection: sqlite3.Connection,
+    fetch_page: Callable[[Optional[str]], Dict[str, Any]],
+    sleep: Callable[[float], None],
+    *,
+    max_attempts: int = 3,
+    base_delay: float = 0.1,
+    logger: Optional[logging.Logger] = None
+) -> int:
+    """
+    Synchronizes data from an API into a SQLite database.
+    Returns the number of unique records committed.
+    """
+    # Validate retry configuration
+    if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or max_attempts <= 0:
+        raise ValueError("max_attempts must be a positive integer")
+    if not isinstance(base_delay, (int, float)) or base_delay < 0 or not math.isfinite(base_delay):
+        raise ValueError("base_delay must be a nonnegative finite number")
+
+    # Reject if caller owns transaction
+    if connection.in_transaction:
+        raise ValueError("Caller owns transaction")
+
+    # Prepare SQL statement for upsert
+    upsert_sql = "INSERT OR REPLACE INTO records (id, name, updated_at) VALUES (?, ?, ?)"
+    cursor_sql = connection.cursor()
+
+    seen_cursors = set()
+    total_records = 0
+    current_cursor = None
+
+    try:
+        while True:
+            # Retry loop for the page fetch
+            page = None
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    page = fetch_page(current_cursor)
+                    break
+                except TransientError:
+                    if attempt == max_attempts:
+                        raise
+                    delay = base_delay * (2 ** (attempt - 1))
+                    sleep(delay)
+
+            # Validate page structure
+            if not isinstance(page, dict):
+                raise ValueError("Page is not a dictionary")
+            
+            items = page.get("items")
+            next_cursor = page.get("next_cursor")
+
+            if not isinstance(items, list):
+                raise ValueError("Page 'items' is not a list")
+            if next_cursor is not None and not isinstance(next_cursor, str):
+                raise ValueError("Page 'next_cursor' is not a string or null")
+
+            # Validate cursor cycle
+            if next_cursor in seen_cursors:
+                raise ValueError("Repeated cursor detected")
+            seen_cursors.add(next_cursor)
+
+            # Validate items
+            for item in items:
+                if not isinstance(item, dict):
+                    raise ValueError("Item is not a dictionary")
+                required_keys = {"id", "name", "updated_at"}
+                if not required_keys.issubset(item.keys()):
+                    raise ValueError(f"Item missing required keys: {required_keys}")
+                item_id = item["id"]
+                item_name = item["name"]
+                updated_at = item["updated_at"]
+                
+                if not isinstance(item_id, str) or not item_id:
+                    raise ValueError("Item 'id' is not a nonempty string")
+                if not isinstance(item_name, str) or not item_name:
+                    raise ValueError("Item 'name' is not a nonempty string")
+                if not isinstance(updated_at, str) or not updated_at:
+                    raise ValueError("Item 'updated_at' is not a nonempty string")
+                # Basic ISO 8601 validation (YYYY-MM-DDTHH:MM:SS±HH:MM)
+                if not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}', updated_at):
+                    raise ValueError(f"Item 'updated_at' is not a valid ISO 8601 timestamp: {updated_at}")
+
+            # Prepare data for insertion
+            records_to_insert = []
+            for item in items:
+                records_to_insert.append((
+                    item["id"],
+                    item["name"],
+                    item["updated_at"]
+                ))
+
+            # Perform database transaction
+            cursor_sql.execute("BEGIN TRANSACTION")
+            try:
+                cursor_sql.executemany(upsert_sql, records_to_insert)
+                total_records += len(records_to_insert)
+                cursor_sql.execute("COMMIT")
+            except Exception:
+                cursor_sql.execute("ROLLBACK")
+                raise
+
+            # Update cursor for next iteration
+            if next_cursor is None:
+                break
+            current_cursor = next_cursor
+
+    except Exception:
+        # Ensure any exception leaves the database as it was
+        # (The transaction is already handled by the try/except block above)
+        raise
+
+    if logger:
+        logger.info("Sync completed successfully.")
+    
+    return total_records
+
+def main(argv: Optional[List[str]] = None) -> int:
+    """
+    CLI entry point.
+    Returns 0 on success, 2 for invalid config, 1 for sync failure.
+    """
+    parser = argparse.ArgumentParser(description="Sync data from API to SQLite.")
+    parser.add_argument("--url", help="API URL (overrides SYNC_URL)")
+    parser.add_argument("--db", help="Database file path (overrides SYNC_DB)")
+    parser.add_argument("--max-attempts", type=int, help="Max retry attempts (overrides SYNC_MAX_ATTEMPTS)")
+    parser.add_argument("--base-delay", type=float, help="Base delay for retries (overrides SYNC_BASE_DELAY)")
+
+    # Parse args
+    args = parser.parse_args(argv)
+
+    # Determine URL
+    url = args.url or os.getenv("SYNC_URL")
+    if not url:
+        sys.stderr.write("Error: SYNC_URL or --url is required.\n")
+        return 2
+
+    # Determine DB path
+    db_path = args.db or os.getenv("SYNC_DB")
+    if not db_path:
+        sys.stderr.write("Error: SYNC_DB or --db is required.\n")
+        return 2
+
+    # Determine max_attempts
+    max_attempts = args.max_attempts
+    if max_attempts is None:
+        max_attempts = int(os.getenv("SYNC_MAX_ATTEMPTS", "3"))
+
+    # Determine base_delay
+    base_delay = args.base_delay
+    if base_delay is None:
+        base_delay = float(os.getenv("SYNC_BASE_DELAY", "0.1"))
+
+    # Setup logging
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    logger = logging.getLogger(__name__)
+
+    # Setup database connection
+    try:
+        connection = sqlite3.connect(db_path)
+    except sqlite3.Error as e:
+        sys.stderr.write(f"Error: Failed to connect to database: {e}\n")
+        return 2
+
+    # Define fetch_page function
+    def fetch_page(cursor: Optional[str]) -> Dict[str, Any]:
+        return fetch_http_page(url, cursor)
+
+    # Define sleep function
+    def sleep(seconds: float) -> None:
+        time.sleep(seconds)
+
+    try:
+        count = sync(connection, fetch_page, sleep, max_attempts=max_attempts, base_delay=base_delay, logger=logger)
+        return 0
+    except ValueError as e:
+        sys.stderr.write(f"Configuration or validation error: {e}\n")
+        return 2
+    except TransientError as e:
+        sys.stderr.write(f"Sync failed due to transient error: {e}\n")
+        return 1
+    except Exception as e:
+        sys.stderr.write(f"Sync failed: {e}\n")
+        return 1
+    finally:
+        connection.close()

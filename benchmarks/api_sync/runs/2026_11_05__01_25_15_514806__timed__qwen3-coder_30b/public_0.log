@@ -1,0 +1,38 @@
+.......................FF.F
+ERROR: Coverage failure: total of 80 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+_______________________ test_bad_record_rejected[bad2] ________________________
+..\..\..\public_tests\test_sync.py:119: in test_bad_record_rejected
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+_______________________ test_bad_record_rejected[bad3] ________________________
+..\..\..\public_tests\test_sync.py:119: in test_bad_record_rejected
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:139: in test_cli_success_and_failure
+    assert app.main([]) == 1
+E   assert 2 == 1
+E    +  where 2 = <function main at 0x000001FB4F580360>([])
+E    +    where <function main at 0x000001FB4F580360> = app.main
+---------------------------- Captured stderr call -----------------------------
+Configuration error: secret
+------------------------------ Captured log call ------------------------------
+INFO     sync_app:sync_app.py:159 Sync completed successfully, committed 1 unique records
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py     148     29    80%
+---------------------------------
+TOTAL           148     29    80%
+FAIL Required test coverage of 90% not reached. Total coverage: 80.41%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad2] - F...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad3] - F...
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - ass...
+3 failed, 24 passed in 0.32s

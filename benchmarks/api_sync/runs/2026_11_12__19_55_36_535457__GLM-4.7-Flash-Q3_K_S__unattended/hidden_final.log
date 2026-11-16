@@ -1,0 +1,90 @@
+F..FFFFF.FF.                                                             [100%]
+================================== FAILURES ===================================
+________________ test_database_failure_rolls_back_all_changes _________________
+..\..\..\hidden_tests\test_acceptance.py:17: in test_database_failure_rolls_back_all_changes
+    app.sync(db, lambda _: page, lambda _: None)
+sync_app.py:146: in sync
+    raise ValueError(f"Item 'updated_at' is not a valid ISO 8601 timestamp: {updated_at}")
+E   ValueError: Item 'updated_at' is not a valid ISO 8601 timestamp: 2026-01-01T00:00:00Z
+_________________ test_logging_does_not_include_record_values _________________
+..\..\..\hidden_tests\test_acceptance.py:43: in test_logging_does_not_include_record_values
+    app.sync(db, lambda _: page, lambda _: None, logger=logger)
+sync_app.py:146: in sync
+    raise ValueError(f"Item 'updated_at' is not a valid ISO 8601 timestamp: {updated_at}")
+E   ValueError: Item 'updated_at' is not a valid ISO 8601 timestamp: 2026-01-01T00:00:00Z
+_ test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z] _
+..\..\..\hidden_tests\test_acceptance.py:55: in test_invalid_calendar_dates_rejected_without_creating_table
+    assert db.execute("SELECT name FROM sqlite_master WHERE name='records'").fetchone() is None
+E   assert ('records',) is None
+E    +  where ('records',) = <built-in method fetchone of sqlite3.Cursor object at 0x00000245D642A940>()
+E    +    where <built-in method fetchone of sqlite3.Cursor object at 0x00000245D642A940> = <sqlite3.Cursor object at 0x00000245D642A940>.fetchone
+E    +      where <sqlite3.Cursor object at 0x00000245D642A940> = <built-in method execute of sqlite3.Connection object at 0x00000245D63CCE50>("SELECT name FROM sqlite_master WHERE name='records'")
+E    +        where <built-in method execute of sqlite3.Connection object at 0x00000245D63CCE50> = <sqlite3.Connection object at 0x00000245D63CCE50>.execute
+_ test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00] _
+..\..\..\hidden_tests\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+_ test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z] _
+..\..\..\hidden_tests\test_acceptance.py:55: in test_invalid_calendar_dates_rejected_without_creating_table
+    assert db.execute("SELECT name FROM sqlite_master WHERE name='records'").fetchone() is None
+E   assert ('records',) is None
+E    +  where ('records',) = <built-in method fetchone of sqlite3.Cursor object at 0x00000245D64B75C0>()
+E    +    where <built-in method fetchone of sqlite3.Cursor object at 0x00000245D64B75C0> = <sqlite3.Cursor object at 0x00000245D64B75C0>.fetchone
+E    +      where <sqlite3.Cursor object at 0x00000245D64B75C0> = <built-in method execute of sqlite3.Connection object at 0x00000245D63CFB50>("SELECT name FROM sqlite_master WHERE name='records'")
+E    +        where <built-in method execute of sqlite3.Connection object at 0x00000245D63CFB50> = <sqlite3.Connection object at 0x00000245D63CFB50>.execute
+__________________ test_all_server_errors_are_retryable[501] __________________
+..\..\..\hidden_tests\test_acceptance.py:65: in test_all_server_errors_are_retryable
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:46: in fetch_http_page
+    with urllib.request.urlopen(req) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1198: in _execute_mock_call
+    raise effect
+E   urllib.error.HTTPError: HTTP Error 501: failed
+__________________ test_all_server_errors_are_retryable[504] __________________
+..\..\..\hidden_tests\test_acceptance.py:65: in test_all_server_errors_are_retryable
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:46: in fetch_http_page
+    with urllib.request.urlopen(req) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1198: in _execute_mock_call
+    raise effect
+E   urllib.error.HTTPError: HTTP Error 504: failed
+__________________ test_all_server_errors_are_retryable[599] __________________
+..\..\..\hidden_tests\test_acceptance.py:65: in test_all_server_errors_are_retryable
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:46: in fetch_http_page
+    with urllib.request.urlopen(req) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1198: in _execute_mock_call
+    raise effect
+E   urllib.error.HTTPError: HTTP Error 599: failed
+=========================== short test summary info ===========================
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_database_failure_rolls_back_all_changes
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_logging_does_not_include_record_values
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[501]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[504]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[599]
+8 failed, 4 passed in 0.43s

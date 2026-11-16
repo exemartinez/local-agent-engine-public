@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-11-01T14:50:21.1289436-03:00",
+  "cpu": {
+    "Name": "Intel(R) Core(TM) i7-10870H CPU @ 2.20GHz",
+    "NumberOfCores": 8,
+    "NumberOfLogicalProcessors": 16
+  },
+  "os": {
+    "Caption": "Microsoft Windows 11 Home",
+    "Version": "10.0.26300",
+    "BuildNumber": "26300",
+    "TotalVisibleMemorySize": 16533932,
+    "FreePhysicalMemory": 435940
+  },
+  "ram": [
+    {
+      "Capacity": 8589934592,
+      "Speed": 3200,
+      "Manufacturer": "Samsung",
+      "PartNumber": "M471A1G44AB0-CWE    "
+    },
+    {
+      "Capacity": 8589934592,
+      "Speed": 3200,
+      "Manufacturer": "Samsung",
+      "PartNumber": "M471A1G44AB0-CWE    "
+    }
+  ],
+  "gpu": [
+    {
+      "Name": "Meta Virtual Monitor",
+      "DriverVersion": "5.3.57.114"
+    },
+    {
+      "Name": "NVIDIA GeForce RTX 3070 Laptop GPU",
+      "DriverVersion": "32.0.16.1692"
+    },
+    {
+      "Name": "Intel(R) UHD Graphics",
+      "DriverVersion": "31.0.101.2141"
+    }
+  ],
+  "disk": [
+    {
+      "DeviceID": "C:",
+      "Size": 1003167412224,
+      "FreeSpace": 9392746496,
+      "DriveType": 3
+    },
+    {
+      "DeviceID": "D:",
+      "Size": 665835520,
+      "FreeSpace": 0,
+      "DriveType": 5
+    }
+  ],
+  "pagefile": {
+    "Name": "***",
+    "AllocatedBaseSize": 43008,
+    "CurrentUsage": 914,
+    "PeakUsage": 6289
+  },
+  "executables": [
+    {
+      "Name": "python.exe",
+      "Source": "***"
+    },
+    {
+      "Name": "python3.exe",
+      "Source": "***"
+    },
+    {
+      "Name": "git.exe",
+      "Source": "***"
+    }
+  ],
+  "path": "***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***;***",
+  "relevant_environment": null
+}

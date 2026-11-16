@@ -1,0 +1,5 @@
+{
+  "response": "\"\"\"Candidate implementation goes here. See spec.md for the public contract.\"\"\"\n\n\nclass TransientError(Exception):\n    pass\n\n\ndef fetch_http_page(url, cursor):\n    raise NotImplementedError\n\n\ndef sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None):\n    raise NotImplementedError\n\n\ndef main(argv=None):\n    raise NotImplementedError\n",
+  "done_reason": "stop",
+  "eval_count": 0
+}

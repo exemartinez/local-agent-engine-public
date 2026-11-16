@@ -1,0 +1,24 @@
+{
+  "model": "qwen3.5:4b",
+  "protocol": "chat-v2",
+  "options": {
+    "think": false,
+    "temperature": 0,
+    "seed": 42,
+    "num_ctx": 8192,
+    "num_predict": 8192
+  },
+  "calls": [
+    {
+      "attempt": 0,
+      "seconds": 32.328999999997905,
+      "done_reason": "stop",
+      "output_tokens": 2808
+    }
+  ],
+  "public_checks": [],
+  "hidden_check": null,
+  "manual_reviews": 1,
+  "status": "review_rejected",
+  "elapsed_seconds": 64.8289999999979
+}

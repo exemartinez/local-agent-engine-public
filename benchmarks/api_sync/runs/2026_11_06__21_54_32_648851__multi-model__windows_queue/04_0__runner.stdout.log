@@ -1,0 +1,5 @@
+{
+  "run": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_06__22_06_47_261906__Qwen3-Coder-30B-A3B-Instruct-Q3_K_S__unattended",
+  "status": "resource_guard",
+  "error": "ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host"
+}

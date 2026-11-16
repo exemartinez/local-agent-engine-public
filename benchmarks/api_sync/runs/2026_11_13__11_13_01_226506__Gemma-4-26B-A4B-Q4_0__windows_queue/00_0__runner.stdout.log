@@ -1,0 +1,5 @@
+{
+  "run": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_13__11_17_23_505314__gemma-4-26B-A4B-it-Q4_0__unattended",
+  "status": "resource_guard",
+  "error": "ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host"
+}

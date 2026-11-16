@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-11-05T18:20:10",
+  "disk_free_bytes": 29459587072,
+  "ram_available_bytes": 5654171648,
+  "ram_total_bytes": 16930746368,
+  "commit_available_bytes": 21570764800,
+  "commit_limit_bytes": 42700550144,
+  "gpu_c": 44,
+  "vram_used_mib": 1235,
+  "vram_total_mib": 8192,
+  "gpu_util_pct": 0,
+  "pages_input_per_sec": 246,
+  "pagefile_used_mib": 1120,
+  "page_reads_per_sec": 39,
+  "cpu_util_pct": 25,
+  "pagefile_allocated_mib": 24576,
+  "ollama_loaded": []
+}

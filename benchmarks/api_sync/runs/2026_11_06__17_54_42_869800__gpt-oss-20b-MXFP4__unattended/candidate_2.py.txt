@@ -1,0 +1,232 @@
+import argparse
+import datetime
+import json
+import math
+import os
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+import sqlite3
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
+
+
+class TransientError(Exception):
+    """Raised for transient network or HTTP errors that should be retried."""
+    pass
+
+
+def fetch_http_page(url: str, cursor: Optional[str]) -> Dict[str, Any]:
+    """
+    Perform an HTTP GET request to the given URL, optionally adding a `cursor`
+    query parameter. The response is expected to be UTF‑8 encoded JSON.
+    Transient errors (HTTP 429, 5xx, or URLError) raise TransientError.
+    """
+    if cursor is not None:
+        parsed = urllib.parse.urlparse(url)
+        query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+        query["cursor"] = [cursor]
+        new_query = urllib.parse.urlencode(query, doseq=True)
+        url = urllib.parse.urlunparse(
+            (parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment)
+        )
+    try:
+        with urllib.request.urlopen(url) as resp:
+            data = resp.read()
+            text = data.decode("utf-8")
+            return json.loads(text)
+    except urllib.error.HTTPError as e:
+        if e.code == 429 or 500 <= e.code < 600:
+            raise TransientError from e
+        raise
+    except urllib.error.URLError as e:
+        raise TransientError from e
+
+
+def _validate_timestamp(ts: str) -> None:
+    if not isinstance(ts, str) or not ts:
+        raise ValueError("updated_at must be a nonempty string")
+    try:
+        # Handle 'Z' timezone
+        if ts.endswith("Z"):
+            ts2 = ts[:-1] + "+00:00"
+        else:
+            ts2 = ts
+        dt = datetime.datetime.fromisoformat(ts2)
+        # Ensure a timezone is present
+        if dt.tzinfo is None:
+            raise ValueError(f"updated_at timestamp missing timezone: {ts}")
+    except Exception as exc:
+        raise ValueError(f"invalid updated_at timestamp: {ts}") from exc
+
+
+def _validate_item(item: Any) -> Tuple[str, str, str]:
+    if not isinstance(item, dict):
+        raise ValueError("item must be a dict")
+    for key in ("id", "name", "updated_at"):
+        if key not in item:
+            raise ValueError(f"item missing required key: {key}")
+    id_ = item["id"]
+    name = item["name"]
+    updated_at = item["updated_at"]
+    if not isinstance(id_, str) or not id_:
+        raise ValueError("id must be a nonempty string")
+    if not isinstance(name, str) or not name:
+        raise ValueError("name must be a nonempty string")
+    if not isinstance(updated_at, str) or not updated_at:
+        raise ValueError("updated_at must be a nonempty string")
+    _validate_timestamp(updated_at)
+    return id_, name, updated_at
+
+
+def _validate_page(page: Any) -> Tuple[List[Tuple[str, str, str]], Optional[str]]:
+    if not isinstance(page, dict):
+        raise ValueError("page must be a dict")
+    if "items" not in page or "next_cursor" not in page:
+        raise ValueError("page missing required keys")
+    items = page["items"]
+    next_cursor = page["next_cursor"]
+    if not isinstance(items, list):
+        raise ValueError("items must be a list")
+    if next_cursor is not None and not isinstance(next_cursor, str):
+        raise ValueError("next_cursor must be None or a string")
+    if next_cursor == "":
+        raise ValueError("next_cursor cannot be an empty string")
+    validated_items = [_validate_item(it) for it in items]
+    return validated_items, next_cursor
+
+
+def sync(
+    connection: sqlite3.Connection,
+    fetch_page: Callable[[Optional[str]], Dict[str, Any]],
+    sleep: Callable[[float], None],
+    *,
+    max_attempts: int = 3,
+    base_delay: float = 0.1,
+    logger: Optional[Any] = None,
+) -> int:
+    """
+    Synchronize records from a paginated API into a SQLite database.
+
+    Returns the number of unique records committed.
+    """
+    # Reject active transaction
+    if connection.in_transaction:
+        raise ValueError("connection already has an active transaction")
+
+    # Validate retry configuration
+    if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or max_attempts <= 0:
+        raise ValueError("max_attempts must be a positive integer")
+    if not isinstance(base_delay, (int, float)) or isinstance(base_delay, bool) or base_delay < 0 or not math.isfinite(base_delay):
+        raise ValueError("base_delay must be a nonnegative finite number")
+
+    seen_cursors = set()
+    records: Dict[str, Tuple[str, str]] = {}
+    cursor: Optional[str] = None
+
+    while True:
+        # Fetch page with retry logic
+        attempt = 1
+        while True:
+            try:
+                page = fetch_page(cursor)
+                break
+            except TransientError as exc:
+                if attempt >= max_attempts:
+                    raise
+                delay = base_delay * (2 ** (attempt - 1))
+                sleep(delay)
+                attempt += 1
+                continue
+
+        # Validate page
+        try:
+            items, next_cursor = _validate_page(page)
+        except Exception as exc:
+            raise ValueError(f"invalid page data: {exc}") from exc
+
+        # Detect repeated cursor
+        if next_cursor is not None:
+            if next_cursor in seen_cursors:
+                raise ValueError("repeated cursor detected")
+            seen_cursors.add(next_cursor)
+
+        # Merge items, last occurrence wins
+        for id_, name, updated_at in items:
+            records[id_] = (name, updated_at)
+
+        if next_cursor is None:
+            break
+        cursor = next_cursor
+
+    # Persist to database atomically
+    try:
+        connection.execute("BEGIN")
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS records (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        for id_, (name, updated_at) in records.items():
+            connection.execute(
+                "INSERT OR REPLACE INTO records (id, name, updated_at) VALUES (?, ?, ?)",
+                (id_, name, updated_at),
+            )
+        connection.commit()
+        return len(records)
+    except Exception:
+        connection.rollback()
+        raise
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    parser = argparse.ArgumentParser(description="Sync API to SQLite")
+    parser.add_argument("--url", help="API URL")
+    parser.add_argument("--db", help="SQLite database file")
+    parser.add_argument("--max-attempts", help="Maximum attempts per page")
+    parser.add_argument("--base-delay", help="Base delay in seconds")
+    args = parser.parse_args(argv)
+
+    url = args.url or os.getenv("SYNC_URL")
+    db_path = args.db or os.getenv("SYNC_DB")
+    if not url or not db_path:
+        print("Missing URL or DB configuration", file=sys.stderr)
+        return 2
+
+    # Parse retry configuration
+    try:
+        if args.max_attempts is not None:
+            max_attempts = int(args.max_attempts)
+        else:
+            max_attempts = int(os.getenv("SYNC_MAX_ATTEMPTS", "3"))
+        if args.base_delay is not None:
+            base_delay = float(args.base_delay)
+        else:
+            base_delay = float(os.getenv("SYNC_BASE_DELAY", "0.1"))
+    except Exception:
+        print("Invalid max-attempts or base-delay", file=sys.stderr)
+        return 2
+
+    try:
+        conn = sqlite3.connect(db_path)
+        count = sync(
+            conn,
+            fetch_http_page,
+            time.sleep,
+            max_attempts=max_attempts,
+            base_delay=base_delay,
+        )
+        print(f"Sync completed: {count} records", file=sys.stderr)
+        return 0
+    except Exception as exc:
+        print(f"Error during sync: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,15 @@
+{
+  "status": "fail",
+  "model": "Gemma 4 26B-A4B",
+  "quantization": "Q4_0",
+  "file": "gemma-4-26B-A4B-it-Q4_0.gguf",
+  "low_ram_guard_disabled": true,
+  "queue": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_13__12_31_32_863242__Gemma-4-26B-A4B-Q4_0__windows_queue\\queue.json",
+  "sha256": "d208665ab1cd3a69f7a9a4bc59430e8448c8093d9b06334f566ac59d6d504a03",
+  "download_seconds": 324.11,
+  "benchmark": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_13__12_36_58_635771__gemma-4-26B-A4B-it-Q4_0__unattended",
+  "seconds": 998.5,
+  "calls": 4,
+  "public": "no score",
+  "hidden": "no score"
+}

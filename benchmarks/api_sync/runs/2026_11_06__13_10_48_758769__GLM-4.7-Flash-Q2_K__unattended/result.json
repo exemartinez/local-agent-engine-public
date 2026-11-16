@@ -1,0 +1,132 @@
+{
+  "status": "incomplete_generation",
+  "calls": [
+    {
+      "seconds": 403.03100000001723,
+      "usage": {
+        "completion_tokens": 8192,
+        "prompt_tokens": 2539,
+        "total_tokens": 10731,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2539,
+        "prompt_ms": 22960.501,
+        "prompt_per_token_ms": 9.043127609294999,
+        "prompt_per_second": 110.58121074971316,
+        "predicted_n": 8192,
+        "predicted_ms": 380016.012,
+        "predicted_per_token_ms": 46.394336711024295,
+        "predicted_per_second": 21.55435492544456
+      },
+      "finish_reason": "length"
+    },
+    {
+      "seconds": 405.89100000000326,
+      "usage": {
+        "completion_tokens": 7761,
+        "prompt_tokens": 8623,
+        "total_tokens": 16384,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 8623,
+        "prompt_ms": 35987.6,
+        "prompt_per_token_ms": 4.173443117244578,
+        "prompt_per_second": 239.61031021796398,
+        "predicted_n": 7761,
+        "predicted_ms": 369606.866,
+        "predicted_per_token_ms": 47.62975077319587,
+        "predicted_per_second": 20.995280969699305
+      },
+      "finish_reason": "length"
+    },
+    {
+      "seconds": 424.3429999999935,
+      "usage": {
+        "completion_tokens": 8192,
+        "prompt_tokens": 8192,
+        "total_tokens": 16384,
+        "prompt_tokens_details": {
+          "cached_tokens": 2492
+        }
+      },
+      "timings": {
+        "cache_n": 2492,
+        "prompt_n": 5700,
+        "prompt_ms": 26387.346,
+        "prompt_per_token_ms": 4.629358947368421,
+        "prompt_per_second": 216.01262969000365,
+        "predicted_n": 8192,
+        "predicted_ms": 397448.728,
+        "predicted_per_token_ms": 48.522613600293006,
+        "predicted_per_second": 20.608947577258316
+      },
+      "finish_reason": "length"
+    },
+    {
+      "seconds": 373.9219999999914,
+      "usage": {
+        "completion_tokens": 7759,
+        "prompt_tokens": 8625,
+        "total_tokens": 16384,
+        "prompt_tokens_details": {
+          "cached_tokens": 8171
+        }
+      },
+      "timings": {
+        "cache_n": 8171,
+        "prompt_n": 454,
+        "prompt_ms": 2795.206,
+        "prompt_per_token_ms": 6.15684140969163,
+        "prompt_per_second": 162.4209450036956,
+        "predicted_n": 7759,
+        "predicted_ms": 370614.341,
+        "predicted_per_token_ms": 47.77189236916731,
+        "predicted_per_second": 20.932811124003425
+      },
+      "finish_reason": "length"
+    }
+  ],
+  "public_checks": [
+    {
+      "exit_code": null,
+      "output": "INCOMPLETE_GENERATION: no complete answer before the output/context limit",
+      "seconds": 0,
+      "incomplete_generation": true
+    },
+    {
+      "exit_code": null,
+      "output": "INCOMPLETE_GENERATION: no complete answer before the output/context limit",
+      "seconds": 0,
+      "incomplete_generation": true
+    },
+    {
+      "exit_code": null,
+      "output": "INCOMPLETE_GENERATION: no complete answer before the output/context limit",
+      "seconds": 0,
+      "incomplete_generation": true
+    },
+    {
+      "exit_code": null,
+      "output": "INCOMPLETE_GENERATION: no complete answer before the output/context limit",
+      "seconds": 0,
+      "incomplete_generation": true
+    }
+  ],
+  "hidden_check": null,
+  "model": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\model-downloads\\GLM-4.7-Flash-Q2_K.gguf",
+  "manual_interventions": 0,
+  "model_cleanup": "not requested",
+  "context_tokens": 16384,
+  "reasoning_budget_tokens": 2048,
+  "test_environment": "Windows host with AST gate and Python socket guard; NOT an OS sandbox",
+  "model_sha256": "96b400bda76c8297a12e6aa4ff894f260baf3e8dd814c8a49cce0d90bf114996",
+  "elapsed_seconds": 1677.734
+}

@@ -1,0 +1,75 @@
+FFF...........FF..........F
+ERROR: Coverage failure: total of 86 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+____________________ test_paginated_upsert_and_idempotency ____________________
+sync_app.py:130: in sync
+    existing_ids = {r[0] for r in connection.execute("SELECT id FROM records").fetchall()}
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   sqlite3.OperationalError: no such table: records
+
+During handling of the above exception, another exception occurred:
+..\..\..\public_tests\test_sync.py:26: in test_paginated_upsert_and_idempotency
+    assert app.sync(db, fetch, lambda _: None) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:141: in sync
+    raise ValueError("Database operation failed")
+E   ValueError: Database operation failed
+_______________________ test_retry_per_page_and_backoff _______________________
+..\..\..\public_tests\test_sync.py:35: in test_retry_per_page_and_backoff
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:100: in sync
+    page_data = fetch_page(cursor)
+                ^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1202: in _execute_mock_call
+    raise result
+E   sync_app.TransientError
+______________ test_invalid_later_page_leaves_database_unchanged ______________
+..\..\..\public_tests\test_sync.py:44: in test_invalid_later_page_leaves_database_unchanged
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs3] ___________
+..\..\..\public_tests\test_sync.py:100: in test_bad_retry_configuration_fails_before_fetch
+    fetch.assert_not_called()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:910: in assert_not_called
+    raise AssertionError(msg)
+E   AssertionError: Expected 'mock' to not have been called. Called 1 times.
+E   Calls: [call(None)].
+_________________ test_exhausted_retries_do_not_create_table __________________
+..\..\..\public_tests\test_sync.py:107: in test_exhausted_retries_do_not_create_table
+    assert fetch.call_count == 2
+E   AssertionError: assert 1 == 2
+E    +  where 1 = <Mock id='1943145753648'>.call_count
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:136: in test_cli_success_and_failure
+    assert app.main([]) == 0
+E   assert 1 == 0
+E    +  where 1 = <function main at 0x000001C46C84A0C0>([])
+E    +    where <function main at 0x000001C46C84A0C0> = app.main
+---------------------------- Captured stderr call -----------------------------
+Sync failed: Database operation failed
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py     140     20    86%
+---------------------------------
+TOTAL           140     20    86%
+FAIL Required test coverage of 90% not reached. Total coverage: 85.71%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_invalid_later_page_leaves_database_unchanged
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs3]
+FAILED ..\..\..\public_tests\test_sync.py::test_exhausted_retries_do_not_create_table
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - ass...
+6 failed, 21 passed in 0.46s

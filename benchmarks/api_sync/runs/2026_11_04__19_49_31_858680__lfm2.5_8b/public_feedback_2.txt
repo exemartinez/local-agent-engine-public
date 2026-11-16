@@ -1,0 +1,1 @@
+The repaired output hit the 4096-token generation limit and ends mid-function, with an unclosed Markdown code fence. Python reports SyntaxError at line 1. Return the complete module, concise enough to fit; output only code and no reasoning or Markdown.

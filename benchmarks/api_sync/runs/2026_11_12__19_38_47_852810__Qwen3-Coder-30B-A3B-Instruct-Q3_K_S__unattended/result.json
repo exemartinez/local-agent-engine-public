@@ -1,0 +1,134 @@
+{
+  "status": "fail",
+  "calls": [
+    {
+      "seconds": 105.2039999999979,
+      "usage": {
+        "completion_tokens": 1686,
+        "prompt_tokens": 2575,
+        "total_tokens": 4261,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2575,
+        "prompt_ms": 27764.248,
+        "prompt_per_token_ms": 10.782232233009708,
+        "prompt_per_second": 92.74517357718459,
+        "predicted_n": 1686,
+        "predicted_ms": 77415.803,
+        "predicted_per_token_ms": 45.94409673590504,
+        "predicted_per_second": 21.765581892885617
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 96.81200000000536,
+      "usage": {
+        "completion_tokens": 1686,
+        "prompt_tokens": 4511,
+        "total_tokens": 6197,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 4511,
+        "prompt_ms": 21412.743,
+        "prompt_per_token_ms": 4.746784083351806,
+        "prompt_per_second": 210.66894605702785,
+        "predicted_n": 1686,
+        "predicted_ms": 75100.563,
+        "predicted_per_token_ms": 44.570067062314536,
+        "predicted_per_second": 22.436582798986475
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 77.5789999999979,
+      "usage": {
+        "completion_tokens": 1686,
+        "prompt_tokens": 4511,
+        "total_tokens": 6197,
+        "prompt_tokens_details": {
+          "cached_tokens": 4502
+        }
+      },
+      "timings": {
+        "cache_n": 4502,
+        "prompt_n": 9,
+        "prompt_ms": 240.217,
+        "prompt_per_token_ms": 26.69077777777778,
+        "prompt_per_second": 37.46612437920713,
+        "predicted_n": 1686,
+        "predicted_ms": 77326.679,
+        "predicted_per_token_ms": 45.89120415430267,
+        "predicted_per_second": 21.790668134086037
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 80.73399999999674,
+      "usage": {
+        "completion_tokens": 1686,
+        "prompt_tokens": 4511,
+        "total_tokens": 6197,
+        "prompt_tokens_details": {
+          "cached_tokens": 4503
+        }
+      },
+      "timings": {
+        "cache_n": 4503,
+        "prompt_n": 8,
+        "prompt_ms": 3895.217,
+        "prompt_per_token_ms": 486.902125,
+        "prompt_per_second": 2.05380085371367,
+        "predicted_n": 1686,
+        "predicted_ms": 76829.171,
+        "predicted_per_token_ms": 45.5959471810089,
+        "predicted_per_second": 21.93177380503038
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "public_checks": [
+    {
+      "exit_code": 1,
+      "output": ".......................FF..\nERROR: Coverage failure: total of 87 is less than fail-under=90\n                                                                         [100%]\n================================== FAILURES ===================================\n_______________________ test_bad_record_rejected[bad2] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_______________________ test_bad_record_rejected[bad3] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     152     20    87%\n---------------------------------\nTOTAL           152     20    87%\nFAIL Required test coverage of 90% not reached. Total coverage: 86.84%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad2] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad3] - F...\n2 failed, 25 passed in 0.86s\n",
+      "seconds": 2.797000000020489
+    },
+    {
+      "exit_code": 1,
+      "output": ".......................FF..\nERROR: Coverage failure: total of 87 is less than fail-under=90\n                                                                         [100%]\n================================== FAILURES ===================================\n_______________________ test_bad_record_rejected[bad2] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_______________________ test_bad_record_rejected[bad3] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     152     20    87%\n---------------------------------\nTOTAL           152     20    87%\nFAIL Required test coverage of 90% not reached. Total coverage: 86.84%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad2] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad3] - F...\n2 failed, 25 passed in 0.34s\n",
+      "seconds": 1.4059999999881256
+    },
+    {
+      "exit_code": 1,
+      "output": ".......................FF..\nERROR: Coverage failure: total of 87 is less than fail-under=90\n                                                                         [100%]\n================================== FAILURES ===================================\n_______________________ test_bad_record_rejected[bad2] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_______________________ test_bad_record_rejected[bad3] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     152     20    87%\n---------------------------------\nTOTAL           152     20    87%\nFAIL Required test coverage of 90% not reached. Total coverage: 86.84%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad2] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad3] - F...\n2 failed, 25 passed in 0.32s\n",
+      "seconds": 1.3439999999827705
+    },
+    {
+      "exit_code": 1,
+      "output": ".......................FF..\nERROR: Coverage failure: total of 87 is less than fail-under=90\n                                                                         [100%]\n================================== FAILURES ===================================\n_______________________ test_bad_record_rejected[bad2] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_______________________ test_bad_record_rejected[bad3] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     152     20    87%\n---------------------------------\nTOTAL           152     20    87%\nFAIL Required test coverage of 90% not reached. Total coverage: 86.84%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad2] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad3] - F...\n2 failed, 25 passed in 0.33s\n",
+      "seconds": 1.375
+    }
+  ],
+  "hidden_check": {
+    "exit_code": 1,
+    "output": "....FFFF..FF                                                             [100%]\n================================== FAILURES ===================================\n_ test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z] _\n..\\..\\..\\hidden_tests\\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_ test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00] _\n..\\..\\..\\hidden_tests\\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_ test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z] _\n..\\..\\..\\hidden_tests\\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n__________________ test_all_server_errors_are_retryable[501] __________________\n..\\..\\..\\hidden_tests\\test_acceptance.py:65: in test_all_server_errors_are_retryable\n    app.fetch_http_page(\"https://example.test\", None)\nsync_app.py:28: in fetch_http_page\n    response = urllib.request.urlopen(new_url)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1139: in __call__\n    return self._mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1143: in _mock_call\n    return self._execute_mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1198: in _execute_mock_call\n    raise effect\nE   urllib.error.HTTPError: HTTP Error 501: failed\n__________________ test_all_server_errors_are_retryable[599] __________________\n..\\..\\..\\hidden_tests\\test_acceptance.py:65: in test_all_server_errors_are_retryable\n    app.fetch_http_page(\"https://example.test\", None)\nsync_app.py:28: in fetch_http_page\n    response = urllib.request.urlopen(new_url)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1139: in __call__\n    return self._mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1143: in _mock_call\n    return self._execute_mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1198: in _execute_mock_call\n    raise effect\nE   urllib.error.HTTPError: HTTP Error 599: failed\n_______________ test_infinite_retry_delay_rejected_before_fetch _______________\n..\\..\\..\\hidden_tests\\test_acceptance.py:73: in test_infinite_retry_delay_rejected_before_fetch\n    fetch.assert_not_called()\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:910: in assert_not_called\n    raise AssertionError(msg)\nE   AssertionError: Expected 'mock' to not have been called. Called 1 times.\nE   Calls: [call(None)].\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_all_server_errors_are_retryable[501]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_all_server_errors_are_retryable[599]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_infinite_retry_delay_rejected_before_fetch\n6 failed, 6 passed in 0.42s\n",
+    "seconds": 1.25
+  },
+  "model": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\model-downloads\\Qwen3-Coder-30B-A3B-Instruct-Q3_K_S.gguf",
+  "manual_interventions": 0,
+  "model_cleanup": "not requested",
+  "context_tokens": 16384,
+  "reasoning_budget_tokens": 2048,
+  "seed": 42,
+  "temperature": 0.0,
+  "test_environment": "Windows host with AST gate and Python socket guard; NOT an OS sandbox",
+  "model_sha256": "17d51f5310e9a598e5ac914d30f401fb2d1bc3b6a06a846919099eac09364ae1",
+  "elapsed_seconds": 425.969
+}

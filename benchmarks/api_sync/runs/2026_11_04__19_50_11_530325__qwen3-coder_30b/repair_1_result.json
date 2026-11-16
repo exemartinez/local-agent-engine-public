@@ -1,0 +1,8 @@
+{
+  "status": "generated_unvalidated",
+  "done_reason": "stop",
+  "output_tokens": 1550,
+  "model": "qwen3-coder:30b",
+  "round": 1,
+  "generation_seconds": 207.40599999998813
+}

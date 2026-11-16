@@ -1,0 +1,26 @@
+﻿{
+    "model":  "lfm2.5:8b",
+    "context":  2048,
+    "output_cap":  256,
+    "ttft_deadline_s":  60,
+    "completion_deadline_s":  180,
+    "elapsed_s":  2.806,
+    "first_token_seen":  true,
+    "stop_reason":  null,
+    "probe_result":  {
+                         "status":  "ok",
+                         "model":  "lfm2.5:8b",
+                         "context":  2048,
+                         "cap":  256,
+                         "ttft_s":  0.066328999993857,
+                         "e2e_s":  1.1778816999867558,
+                         "actual_input_tokens":  43,
+                         "actual_output_tokens":  216,
+                         "generated_tokens_s":  194.66790196668654,
+                         "done_reason":  "stop",
+                         "response":  "\u003cthink\u003e\nThe user asks: \"Return only Python code for this function, with no Markdown:\" and then provides a docstring. So we need to output just the Python code snippet for the function clamp(value, lower, upper) that returns value bounded to inclusive [lower, upper]. No extra text, no markdown formatting. So we should output:\n\ndef clamp(value, lower, upper):\n    \"\"\"Return value bounded to inclusive [lower, upper.]\"\"\"\n    return max(lower, min(value, upper))\n\nThat\u0027s the typical implementation. Ensure no extra commentary. Provide only that code. No markdown fences. So just plain text.\n\nThus final answer: \ndef clamp(value, lower, upper):\n    \"\"\"Return value bounded to inclusive [lower, upper.]\"\"\"\n    return max(lower, min(value, upper))\n\nMake sure no extra spaces or lines? It\u0027s fine.\n\u003c/think\u003e\ndef clamp(value, lower, upper):\n    \"\"\"Return value bounded to inclusive [lower, upper.]\"\"\"\n    return max(lower, min(value, upper))"
+                     },
+    "sample_csv":  "C:\\workspace\\local-agent-engine\\benchmarks\\results\\2026_11_04__15_04_36__fallback_probe__lfm2.5_8b.samples.csv",
+    "stdout_log":  "C:\\workspace\\local-agent-engine\\benchmarks\\logs\\2026_11_04__15_04_36__fallback_probe__lfm2.5_8b.stdout.log",
+    "stderr_log":  "C:\\workspace\\local-agent-engine\\benchmarks\\logs\\2026_11_04__15_04_36__fallback_probe__lfm2.5_8b.stderr.log"
+}

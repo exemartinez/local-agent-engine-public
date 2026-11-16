@@ -1,0 +1,195 @@
+FFFF.FFFFFF.F..FFFFFFFFFFFF
+ERROR: Coverage failure: total of 44 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+____________________ test_paginated_upsert_and_idempotency ____________________
+..\..\..\public_tests\test_sync.py:26: in test_paginated_upsert_and_idempotency
+    assert app.sync(db, fetch, lambda _: None) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+_______________________ test_retry_per_page_and_backoff _______________________
+..\..\..\public_tests\test_sync.py:35: in test_retry_per_page_and_backoff
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+______________ test_invalid_later_page_leaves_database_unchanged ______________
+..\..\..\public_tests\test_sync.py:45: in test_invalid_later_page_leaves_database_unchanged
+    app.sync(db, lambda _: next(pages), lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_repeated_cursor_rejected ________________________
+..\..\..\public_tests\test_sync.py:51: in test_repeated_cursor_rejected
+    app.sync(db, lambda _: {"items": [], "next_cursor": "same"}, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+___________________ test_http_pagination_and_existing_query ___________________
+..\..\..\public_tests\test_sync.py:72: in test_http_pagination_and_existing_query
+    assert parse_qs(urlsplit(url).query) == {"key": ["value"], "cursor": ["a b"]}
+E   AssertionError: assert {'key': ['value?cursor=a b']} == {'key': ['val...sor': ['a b']}
+E     
+E     Differing items:
+E     {'key': ['value?cursor=a b']} != {'key': ['value']}
+E     Right contains 1 more item:
+E     {'cursor': ['a b']}
+E     Use -v to get more diff
+__________________ test_http_error_classification[429-True] ___________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE TransientError
+__________________ test_http_error_classification[500-True] ___________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE TransientError
+__________________ test_http_error_classification[503-True] ___________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE TransientError
+__________________ test_http_error_classification[404-False] __________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE HTTPError
+____________________ test_http_network_error_is_transient _____________________
+..\..\..\public_tests\test_sync.py:91: in test_http_network_error_is_transient
+    with pytest.raises(app.TransientError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE TransientError
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs1] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+_________________ test_exhausted_retries_do_not_create_table __________________
+..\..\..\public_tests\test_sync.py:106: in test_exhausted_retries_do_not_create_table
+    app.sync(db, fetch, lambda _: None, max_attempts=2)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_bad_page_rejected[None] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_bad_page_rejected[bad1] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_bad_page_rejected[bad2] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_bad_page_rejected[bad3] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_bad_page_rejected[bad4] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+_______________________ test_bad_record_rejected[None] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+_______________________ test_bad_record_rejected[bad1] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+_______________________ test_bad_record_rejected[bad2] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+_______________________ test_bad_record_rejected[bad3] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+____________________ test_active_transaction_is_preserved _____________________
+..\..\..\public_tests\test_sync.py:127: in test_active_transaction_is_preserved
+    app.sync(db, Mock(), lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:136: in test_cli_success_and_failure
+    assert app.main([]) == 0
+E   assert 1 == 0
+E    +  where 1 = <function main at 0x00000127BEB86160>([])
+E    +    where <function main at 0x00000127BEB86160> = app.main
+---------------------------- Captured stderr call -----------------------------
+ERROR: sync failure
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py     110     62    44%
+---------------------------------
+TOTAL           110     62    44%
+FAIL Required test coverage of 90% not reached. Total coverage: 43.64%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_invalid_later_page_leaves_database_unchanged
+FAILED ..\..\..\public_tests\test_sync.py::test_repeated_cursor_rejected - At...
+FAILED ..\..\..\public_tests\test_sync.py::test_http_pagination_and_existing_query
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[429-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[500-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[503-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[404-False]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_network_error_is_transient
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs1]
+FAILED ..\..\..\public_tests\test_sync.py::test_exhausted_retries_do_not_create_table
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[None] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad1] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad2] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad3] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad4] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[None] - A...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad1] - A...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad2] - A...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad3] - A...
+FAILED ..\..\..\public_tests\test_sync.py::test_active_transaction_is_preserved
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - ass...
+23 failed, 4 passed in 0.63s

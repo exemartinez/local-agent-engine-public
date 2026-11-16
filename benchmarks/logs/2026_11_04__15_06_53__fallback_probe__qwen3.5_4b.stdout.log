@@ -1,0 +1,2 @@
+EVENT {"kind": "first_token", "ttft_s": 4.408452999996371}
+{"status": "ok", "model": "qwen3.5:4b", "context": 2048, "cap": 256, "ttft_s": 4.408452999996371, "e2e_s": 4.65257500000007, "actual_input_tokens": 47, "actual_output_tokens": 21, "generated_tokens_s": 86.4813220935069, "done_reason": "stop", "response": "def clamp(value, lower, upper):\n    return max(lower, min(upper, value))"}

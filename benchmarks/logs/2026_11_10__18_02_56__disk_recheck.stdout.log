@@ -1,0 +1,1 @@
+{"report": "C:\\workspace\\local-agent-engine\\documentation\\archive\\system-investigations\\2026_11_10__18_02_57__disk_inventory.md", "raw": "C:\\workspace\\local-agent-engine\\benchmarks\\results\\2026_11_10__18_02_57__disk_inventory.json", "counts": {"files": 1071968, "directories": 295134, "errors": 134, "reparse_points_skipped": 198, "hardlinks_deduplicated": 0}}

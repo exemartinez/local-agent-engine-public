@@ -1,0 +1,1 @@
+The public tests cannot collect the module: SyntaxError at line 154, where the if condition calling os.path.isabs has an unclosed parenthesis. Return a complete corrected module that fulfills the specification and all public tests.

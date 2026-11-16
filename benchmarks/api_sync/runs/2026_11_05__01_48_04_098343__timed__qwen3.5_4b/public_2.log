@@ -1,0 +1,166 @@
+FF...F.FF.....FF....F..FF.F
+ERROR: Coverage failure: total of 84 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+____________________ test_paginated_upsert_and_idempotency ____________________
+..\..\..\public_tests\test_sync.py:26: in test_paginated_upsert_and_idempotency
+    assert app.sync(db, fetch, lambda _: None) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:160: in sync
+    conn.execute(
+E   sqlite3.OperationalError: no such table: records
+_______________________ test_retry_per_page_and_backoff _______________________
+..\..\..\public_tests\test_sync.py:35: in test_retry_per_page_and_backoff
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:120: in sync
+    page = fetch_page(cursor)
+           ^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1202: in _execute_mock_call
+    raise result
+E   sync_app.TransientError
+___________________ test_http_pagination_and_existing_query ___________________
+..\..\..\public_tests\test_sync.py:72: in test_http_pagination_and_existing_query
+    assert parse_qs(urlsplit(url).query) == {"key": ["value"], "cursor": ["a b"]}
+E   assert {'key': ["['v...: ["['a b']"]} == {'key': ['val...sor': ['a b']}
+E     
+E     Differing items:
+E     {'cursor': ["['a b']"]} != {'cursor': ['a b']}
+E     {'key': ["['value']"]} != {'key': ['value']}
+E     Use -v to get more diff
+__________________ test_http_error_classification[500-True] ___________________
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:51: in fetch_http_page
+    with urllib.request.urlopen(full_url) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1198: in _execute_mock_call
+    raise effect
+E   urllib.error.HTTPError: HTTP Error 500: failed
+__________________ test_http_error_classification[503-True] ___________________
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:51: in fetch_http_page
+    with urllib.request.urlopen(full_url) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1198: in _execute_mock_call
+    raise effect
+E   urllib.error.HTTPError: HTTP Error 503: failed
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs3] ___________
+..\..\..\public_tests\test_sync.py:100: in test_bad_retry_configuration_fails_before_fetch
+    fetch.assert_not_called()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:910: in assert_not_called
+    raise AssertionError(msg)
+E   AssertionError: Expected 'mock' to not have been called. Called 1 times.
+E   Calls: [call(None)].
+_________________ test_exhausted_retries_do_not_create_table __________________
+..\..\..\public_tests\test_sync.py:107: in test_exhausted_retries_do_not_create_table
+    assert fetch.call_count == 2
+E   AssertionError: assert 1 == 2
+E    +  where 1 = <Mock id='2266592131840'>.call_count
+________________________ test_bad_page_rejected[bad4] _________________________
+..\..\..\public_tests\test_sync.py:113: in test_bad_page_rejected
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+_______________________ test_bad_record_rejected[bad2] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:160: in sync
+    conn.execute(
+E   sqlite3.OperationalError: no such table: records
+_______________________ test_bad_record_rejected[bad3] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:160: in sync
+    conn.execute(
+E   sqlite3.OperationalError: no such table: records
+________________________ test_cli_success_and_failure _________________________
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:2546: in _get_value
+    result = type_func(arg_string)
+             ^^^^^^^^^^^^^^^^^^^^^
+E   ValueError: invalid literal for int() with base 10: 'nope'
+
+During handling of the above exception, another exception occurred:
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:1943: in _parse_known_args2
+    namespace, args = self._parse_known_args(args, namespace, intermixed)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:2184: in _parse_known_args
+    start_index = consume_optional(start_index)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:2113: in consume_optional
+    take_action(action, args, option_string)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:2003: in take_action
+    argument_values = self._get_values(action, argument_strings)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:2513: in _get_values
+    value = self._get_value(action, arg_string)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:2558: in _get_value
+    raise ArgumentError(action, msg % args)
+E   argparse.ArgumentError: argument --max-attempts: invalid int value: 'nope'
+
+During handling of the above exception, another exception occurred:
+..\..\..\public_tests\test_sync.py:141: in test_cli_success_and_failure
+    assert app.main(["--max-attempts", "nope"]) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:205: in main
+    args = parser.parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:1904: in parse_args
+    args, argv = self.parse_known_args(args, namespace)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:1914: in parse_known_args
+    return self._parse_known_args2(args, namespace, intermixed=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:1945: in _parse_known_args2
+    self.error(str(err))
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:2650: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:2637: in exit
+    _sys.exit(status)
+E   SystemExit: 2
+---------------------------- Captured stderr call -----------------------------
+usage: __main__.py [-h] [--url URL] [--db DB] [--max-attempts MAX_ATTEMPTS]
+                   [--base-delay BASE_DELAY]
+__main__.py: error: argument --max-attempts: invalid int value: 'nope'
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py     155     25    84%
+---------------------------------
+TOTAL           155     25    84%
+FAIL Required test coverage of 90% not reached. Total coverage: 83.87%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_http_pagination_and_existing_query
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[500-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[503-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs3]
+FAILED ..\..\..\public_tests\test_sync.py::test_exhausted_retries_do_not_create_table
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad4] - Fai...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad2] - s...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad3] - s...
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - Sys...
+11 failed, 16 passed in 0.73s

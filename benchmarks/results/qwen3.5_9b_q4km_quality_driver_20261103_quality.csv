@@ -1,0 +1,7 @@
+model,case,attempt,status,error,response_s,actual_input_tokens,actual_output_tokens,generated_tokens_s
+qwen3.5:9b-q4_K_M,mean,0,pass,,11.080638399987947,48,34,60.40707260219455
+qwen3.5:9b-q4_K_M,mean,1,pass,,0.651863900013268,48,34,60.857300370155585
+qwen3.5:9b-q4_K_M,slugify,0,fail,slugify basic case failed,,,,
+qwen3.5:9b-q4_K_M,slugify,1,fail,slugify basic case failed,,,,
+qwen3.5:9b-q4_K_M,merge_intervals,0,pass,,2.095529099999112,70,121,60.48218799563528
+qwen3.5:9b-q4_K_M,merge_intervals,1,pass,,2.1917788999999175,70,121,59.42120796931705

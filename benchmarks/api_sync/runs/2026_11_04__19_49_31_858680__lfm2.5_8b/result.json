@@ -1,0 +1,11 @@
+{
+  "model": "lfm2.5:8b",
+  "status": "generated_unvalidated",
+  "calls": 1,
+  "repair_rounds": 0,
+  "human_interventions": 0,
+  "final_validation": "not run: isolated executor required",
+  "done_reason": "stop",
+  "output_tokens": 3625,
+  "generation_seconds": 32.01600000000326
+}

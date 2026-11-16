@@ -1,0 +1,1 @@
+This directory is a harness smoke test. The model call was replaced with the reviewed reference implementation. It must not be included in model comparisons.

@@ -1,0 +1,7 @@
+model,case,attempt,status,error,response_s,actual_input_tokens,actual_output_tokens,generated_tokens_s
+qwen3:8b,mean,0,pass,,9.892868599999929,52,30,65.75356877494526
+qwen3:8b,mean,1,pass,,0.4529935000027763,52,30,73.63788325449988
+qwen3:8b,slugify,0,fail,generated code uses an unsafe attribute,,,,
+qwen3:8b,slugify,1,fail,generated code uses an unsafe attribute,,,,
+qwen3:8b,merge_intervals,0,fail,merge_intervals returned an incorrect result,,,,
+qwen3:8b,merge_intervals,1,fail,merge_intervals returned an incorrect result,,,,

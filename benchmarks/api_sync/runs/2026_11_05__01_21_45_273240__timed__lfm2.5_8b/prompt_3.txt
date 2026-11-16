@@ -1,0 +1,435 @@
+Return the full corrected sync_app.py as Python code only.
+
+# API-to-SQLite synchronization specification
+
+## Contract
+
+Implement `sync_app.py` using Python's standard library. Expose `sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None) -> int`, `fetch_http_page(url, cursor)`, and `main(argv=None) -> int`. The model may add helpers but must preserve these signatures. `connection` is a `sqlite3.Connection`; `fetch_page(cursor)` returns a decoded page dictionary. `sleep(seconds)` is injectable. The sync result is the number of unique records committed.
+
+Each page has exactly the required keys `items` (list) and `next_cursor` (null or a nonempty string). An item is a dictionary with `id` (nonempty string), `name` (nonempty string), and `updated_at` (nonempty ISO 8601 timestamp including a timezone). Preserve the timestamp text. Extra page or item keys are permitted and ignored. Duplicate IDs across pages are resolved by the last occurrence in fetch order.
+
+Fetch the first page using cursor `None`, then follow `next_cursor` until null. Detect a repeated cursor and raise `ValueError`. Invalid pages or records raise `ValueError`. All pages must be validated before any persistent database change. Upsert into `records(id TEXT PRIMARY KEY, name TEXT NOT NULL, updated_at TEXT NOT NULL)` in one transaction; repeated runs must not duplicate rows. A failed fetch, validation, or database operation leaves the database as it was before the call, including if the table did not previously exist. Do not commit or roll back a transaction already owned by the caller: reject an already-active transaction with `ValueError` before fetching.
+
+Define `TransientError` for retryable fetch failures. Retry each individual page at most `max_attempts` total calls, sleeping `base_delay * 2**(attempt-1)` after each non-final `TransientError`. Other exceptions propagate immediately. Validate `max_attempts` is a positive integer excluding booleans and `base_delay` is a nonnegative finite number before fetching. Log successful completion without logging credentials or record contents.
+
+`fetch_http_page` performs a GET using `urllib.request`, appending a URL-encoded `cursor` query parameter only when cursor is not null, preserving existing query parameters. It decodes UTF-8 JSON. HTTP 429, HTTP 5xx, and `urllib.error.URLError` raise `TransientError`; other HTTP errors propagate. No network access is needed in tests.
+
+CLI: `--url` and `--db` override `SYNC_URL` and `SYNC_DB` environment variables; both are required. `--max-attempts` and `--base-delay` override `SYNC_MAX_ATTEMPTS` and `SYNC_BASE_DELAY`, defaults 3 and 0.1. `main` returns 0 on success, 2 for invalid configuration, 1 for sync failure, and writes useful diagnostics to stderr. Running the file directly exits with that code. Do not log the URL because it may contain credentials.
+
+## Acceptance
+
+Public and hidden tests must pass; line coverage of `sync_app.py` must be at least 90%. Tests must mock all HTTP requests and sleeps, and use in-memory or temporary SQLite databases. A successful run alone does not establish production readiness.
+
+
+# Design and plan
+
+Use a standard-library-only single module for a fair, bounded generation task. Separate HTTP transport, validation, transaction management, retry policy, and CLI orchestration. Fetch and validate into memory before beginning the database transaction; use parameterized SQLite statements and an explicit transaction. Test through dependency injection and mocked `urllib.request.urlopen`. Candidate code may choose its internal design while honoring the public signatures and behavior in `spec.md`.
+
+
+# Tasks
+
+1. Implement transport and transient-error classification.
+2. Implement validated pagination, cursor-cycle detection, and bounded retries.
+3. Implement atomic, idempotent SQLite storage and caller-transaction protection.
+4. Implement environment/CLI configuration, exit codes, and safe logging.
+5. Implement and run tests with mocked HTTP and sleep; measure line coverage.
+
+
+CURRENT CODE:
+"""Synchronize a SQLite database with paginated HTTP pages."""
+import sqlite3
+import json
+import urllib.request
+import urllib.error
+import time
+import os
+import sys
+from datetime import datetime
+from typing import Dict, Any, Optional, Callable
+
+
+class TransientError(Exception):
+    """Raised for retryable fetch failures."""
+    pass
+
+
+def _validate_config(max_attempts: int, base_delay: float) -> None:
+    """Validate configuration parameters."""
+    if not isinstance(max_attempts, int) or max_attempts <= 0:
+        raise ValueError("max_attempts must be a positive integer")
+    if not (isinstance(base_delay, (int, float)) and base_delay >= 0):
+        raise ValueError("base_delay must be a nonnegative finite number")
+
+
+def _parse_url_params(url: str) -> Dict[str, Any]:
+    """Parse URL query parameters preserving existing ones."""
+    parsed = urllib.parse.urlparse(url)
+    if parsed.query:
+        return dict(urllib.parse.parse_qs(parsed.query))
+    return {}
+
+
+def fetch_http_page(url: str, cursor: Optional[str]) -> Dict[str, Any]:
+    """
+    Perform a GET request to `url`, appending a URL‑encoded ``cursor`` query
+    parameter when ``cursor`` is not ``None``. Returns the decoded JSON payload.
+    Raises : TransientError for HTTP 429, 5xx errors and URLError; otherwise
+    propagates other exceptions.
+    """
+    if cursor is None:
+        return _parse_url_params(url)
+
+    params = _parse_url_params(url)
+    if params:
+        # Replace existing cursor param with the new value
+        params['cursor'] = urllib.parse.urlencode({'cursor': cursor})
+    full_url = url + '?' + params.get('cursor', '')
+    try:
+        with urllib.request.urlopen(full_url) as response:
+            return json.load(response)
+    except urllib.error.HTTPError as e:
+        if e.code in (429, 500, 501, 502, 503, 504):
+            raise TransientError(e)
+        else:
+            raise
+    except urllib.error.URLError as e:
+        raise TransientError(e)
+
+
+def _validate_item(item: Dict[str, Any]) -> None:
+    """Validate that an item has required fields and types."""
+    if not isinstance(item, dict):
+        raise ValueError("item must be a dictionary")
+    required = {'id', 'name', 'updated_at'}
+    if set(item.keys()) != required:
+        raise ValueError(f"item keys must be {required}, got {set(item.keys())}")
+    if not item['id'] or not isinstance(item['id'], str) or not item['id'].strip():
+        raise ValueError("item.id must be a non‑empty string")
+    if not item['name'] or not isinstance(item['name'], str) or not item['name'].strip():
+        raise ValueError("item.name must be a non‑empty string")
+    if not item['updated_at']:
+        raise ValueError("item.updated_at must be a non‑empty ISO 8601 timestamp")
+
+
+def sync(
+    connection: sqlite3.Connection,
+    fetch_page: Callable[[str, Optional[str]], Any],
+    sleep: Callable[int, None],
+    *,
+    max_attempts: int = 3,
+    base_delay: float = 0.1,
+    logger: Optional[Any] = None,
+) -> int:
+    """
+    Sync a SQLite database with paginated HTTP pages.
+
+    Returns the number of unique records that were committed.
+    Raises ValueError for configuration errors, duplicate cursors,
+    validation failures, or already‑active transactions.
+    """
+    _validate_config(max_attempts, base_delay)
+
+    if connection.is_autocommit:
+        raise ValueError("already active transaction")
+
+    url = None
+    next_cursor = None
+    seen_cursors = set()
+    unique_ids = set()
+
+    def _commit():
+        with connection.cursor() as cur:
+            cur.execute('BEGIN')
+            try:
+                return True
+            except sqlite3.IntegrityError:
+                cur.execute('ROLLBACK')
+                raise
+
+    attempts = 0
+    while True:
+        if next_cursor is not None:
+            page = fetch_page(url, next_cursor)
+            next_cursor = page.get('next_cursor')
+        else:
+            page = fetch_http_page(url, None)
+
+        # Validate page structure
+        if not isinstance(page, dict):
+            raise ValueError("page must be a dictionary")
+        _validate_page(page)
+        url = page.get('next_cursor')
+
+        # Detect duplicate cursor
+        if next_cursor in seen_cursors:
+            raise ValueError(f"duplicate cursor {next_cursor}")
+
+        seen_cursors.add(next_cursor)
+        attempts += 1
+
+        if attempts > max_attempts:
+            raise ValueError(f"max attempts ({max_attempts}) exceeded")
+
+        # Apply delays for transient errors
+        if attempts < max_attempts:
+            delay = base_delay * (2 ** (attempts - 1))
+            sleep(delay)
+
+    # All pages validated – upsert into records table
+    try:
+        with connection.cursor() as cur:
+            cur.execute('BEGIN')
+            for item in unique_ids:
+                cur.execute(
+                    'INSERT OR REPLACE INTO records (id, name, updated_at) VALUES (?, ?, ?)',
+                    (item['id'], item['name'], item['updated_at'])
+                )
+            commit = _commit()
+            if commit:
+                return len(unique_ids)
+    except Exception:
+        # Rollback any partial changes
+        try:
+            cur.execute('ROLLBACK')
+        except sqlite3.Error:
+            pass
+        raise
+
+
+def _validate_page(page: Dict[str, Any]) -> None:
+    """Validate a page's pagination and item data."""
+    if not isinstance(page, dict):
+        raise ValueError("page must be a dictionary")
+    required_keys = {'items', 'next_cursor'}
+    if set(page.keys()) != required_keys:
+        raise ValueError(f"page keys must be {required_keys}, got {set(page.keys())}")
+    items = page['items']
+    if not isinstance(items, list):
+        raise ValueError("items must be a list")
+    for item in items:
+        _validate_item(item)
+
+
+def main(argv: Optional[list]) -> int:
+    """CLI entry point."""
+    url = os.getenv('SYNC_URL')
+    db_path = os.getenv('SYNC_DB')
+
+    if not url or not db_path:
+        sys.stderr.write("ERROR: SYNC_URL and SYNC_DB environment variables must be set\n")
+        return 2
+
+    try:
+        sync(
+            sqlite3.connect(db_path),
+            fetch_http_page,
+            sleep,
+            max_attempts=argv[1] if len(argv) > 1 else 3,
+            base_delay=argv[2] if len(argv) > 2 else 0.1,
+        )
+    except ValueError:
+        sys.stderr.write("ERROR: invalid configuration\n")
+        return 2
+    except Exception:
+        sys.stderr.write("ERROR: sync failure\n")
+        return 1
+
+    return 0
+
+
+PUBLIC TEST FAILURES:
+FFFF.FFFFFF.F..FFFFFFFFFFFF
+ERROR: Coverage failure: total of 44 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+____________________ test_paginated_upsert_and_idempotency ____________________
+..\..\..\public_tests\test_sync.py:26: in test_paginated_upsert_and_idempotency
+    assert app.sync(db, fetch, lambda _: None) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+_______________________ test_retry_per_page_and_backoff _______________________
+..\..\..\public_tests\test_sync.py:35: in test_retry_per_page_and_backoff
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+______________ test_invalid_later_page_leaves_database_unchanged ______________
+..\..\..\public_tests\test_sync.py:45: in test_invalid_later_page_leaves_database_unchanged
+    app.sync(db, lambda _: next(pages), lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_repeated_cursor_rejected ________________________
+..\..\..\public_tests\test_sync.py:51: in test_repeated_cursor_rejected
+    app.sync(db, lambda _: {"items": [], "next_cursor": "same"}, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+___________________ test_http_pagination_and_existing_query ___________________
+..\..\..\public_tests\test_sync.py:72: in test_http_pagination_and_existing_query
+    assert parse_qs(urlsplit(url).query) == {"key": ["value"], "cursor": ["a b"]}
+E   AssertionError: assert {'key': ['value?cursor=a b']} == {'key': ['val...sor': ['a b']}
+E     
+E     Differing items:
+E     {'key': ['value?cursor=a b']} != {'key': ['value']}
+E     Right contains 1 more item:
+E     {'cursor': ['a b']}
+E     Use -v to get more diff
+__________________ test_http_error_classification[429-True] ___________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE TransientError
+__________________ test_http_error_classification[500-True] ___________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE TransientError
+__________________ test_http_error_classification[503-True] ___________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE TransientError
+__________________ test_http_error_classification[404-False] __________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE HTTPError
+____________________ test_http_network_error_is_transient _____________________
+..\..\..\public_tests\test_sync.py:91: in test_http_network_error_is_transient
+    with pytest.raises(app.TransientError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE TransientError
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs1] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+_________________ test_exhausted_retries_do_not_create_table __________________
+..\..\..\public_tests\test_sync.py:106: in test_exhausted_retries_do_not_create_table
+    app.sync(db, fetch, lambda _: None, max_attempts=2)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_bad_page_rejected[None] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_bad_page_rejected[bad1] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_bad_page_rejected[bad2] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_bad_page_rejected[bad3] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_bad_page_rejected[bad4] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+_______________________ test_bad_record_rejected[None] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+_______________________ test_bad_record_rejected[bad1] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+_______________________ test_bad_record_rejected[bad2] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+_______________________ test_bad_record_rejected[bad3] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+____________________ test_active_transaction_is_preserved _____________________
+..\..\..\public_tests\test_sync.py:127: in test_active_transaction_is_preserved
+    app.sync(db, Mock(), lambda _: None)
+sync_app.py:94: in sync
+    if connection.is_autocommit:
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_autocommit'. Did you mean: 'autocommit'?
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:136: in test_cli_success_and_failure
+    assert app.main([]) == 0
+E   assert 1 == 0
+E    +  where 1 = <function main at 0x00000127BEB86160>([])
+E    +    where <function main at 0x00000127BEB86160> = app.main
+---------------------------- Captured stderr call -----------------------------
+ERROR: sync failure
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py     110     62    44%
+---------------------------------
+TOTAL           110     62    44%
+FAIL Required test coverage of 90% not reached. Total coverage: 43.64%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_invalid_later_page_leaves_database_unchanged
+FAILED ..\..\..\public_tests\test_sync.py::test_repeated_cursor_rejected - At...
+FAILED ..\..\..\public_tests\test_sync.py::test_http_pagination_and_existing_query
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[429-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[500-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[503-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[404-False]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_network_error_is_transient
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs1]
+FAILED ..\..\..\public_tests\test_sync.py::test_exhausted_retries_do_not_create_table
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[None] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad1] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad2] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad3] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad4] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[None] - A...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad1] - A...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad2] - A...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad3] - A...
+FAILED ..\..\..\public_tests\test_sync.py::test_active_transaction_is_preserved
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - ass...
+23 failed, 4 passed in 0.63s

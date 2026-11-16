@@ -1,0 +1,30 @@
+# Local editor and Python environment state
+.idea/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.coverage.*
+.test_tmp/
+.public_tmp/
+.hidden_tmp/
+benchmarks/api_sync/runtime/
+benchmarks/api_sync/model-downloads/
+
+# Benchmark results are retained for review; runtime binaries and models are excluded.
+
+# Local rollback backups and credential files.
+benchmarks/results/run_traceability_backups/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+benchmarks/results/doc_organization_backups/
+
+# Disposable host test sandboxes can contain system caches and local data.
+benchmarks/api_sync/runs/**/*__host_public/
+benchmarks/api_sync/runs/**/*__host_hidden/

@@ -1,0 +1,76 @@
+FFFFFFFFFFFF                                                             [100%]
+================================== FAILURES ===================================
+________________ test_database_failure_rolls_back_all_changes _________________
+..\..\..\hidden_tests\test_acceptance.py:17: in test_database_failure_rolls_back_all_changes
+    app.sync(db, lambda _: page, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+__________________ test_nontransient_failure_is_not_retried ___________________
+..\..\..\hidden_tests\test_acceptance.py:26: in test_nontransient_failure_is_not_retried
+    app.sync(db, fetch, sleep)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+_________________________ test_retry_resets_per_page __________________________
+..\..\..\hidden_tests\test_acceptance.py:33: in test_retry_resets_per_page
+    fetch = Mock(side_effect=[app.TransientError(), {"items": [], "next_cursor": "next"}, app.TransientError(), {"items": [], "next_cursor": None}])
+                              ^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'TransientError'
+_________________ test_logging_does_not_include_record_values _________________
+..\..\..\hidden_tests\test_acceptance.py:43: in test_logging_does_not_include_record_values
+    app.sync(db, lambda _: page, lambda _: None, logger=logger)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+_ test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z] _
+..\..\..\hidden_tests\test_acceptance.py:53: in test_invalid_calendar_dates_rejected_without_creating_table
+    app.sync(db, fetch, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+_ test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00] _
+..\..\..\hidden_tests\test_acceptance.py:53: in test_invalid_calendar_dates_rejected_without_creating_table
+    app.sync(db, fetch, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+_ test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z] _
+..\..\..\hidden_tests\test_acceptance.py:53: in test_invalid_calendar_dates_rejected_without_creating_table
+    app.sync(db, fetch, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+__________________ test_all_server_errors_are_retryable[501] __________________
+..\..\..\hidden_tests\test_acceptance.py:64: in test_all_server_errors_are_retryable
+    with pytest.raises(app.TransientError):
+                       ^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'TransientError'
+__________________ test_all_server_errors_are_retryable[502] __________________
+..\..\..\hidden_tests\test_acceptance.py:64: in test_all_server_errors_are_retryable
+    with pytest.raises(app.TransientError):
+                       ^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'TransientError'
+__________________ test_all_server_errors_are_retryable[504] __________________
+..\..\..\hidden_tests\test_acceptance.py:64: in test_all_server_errors_are_retryable
+    with pytest.raises(app.TransientError):
+                       ^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'TransientError'
+__________________ test_all_server_errors_are_retryable[599] __________________
+..\..\..\hidden_tests\test_acceptance.py:64: in test_all_server_errors_are_retryable
+    with pytest.raises(app.TransientError):
+                       ^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'TransientError'
+_______________ test_infinite_retry_delay_rejected_before_fetch _______________
+..\..\..\hidden_tests\test_acceptance.py:72: in test_infinite_retry_delay_rejected_before_fetch
+    app.sync(db, fetch, lambda _: None, base_delay=float("inf"))
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+=========================== short test summary info ===========================
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_database_failure_rolls_back_all_changes
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_nontransient_failure_is_not_retried
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_retry_resets_per_page
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_logging_does_not_include_record_values
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[501]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[502]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[504]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[599]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_infinite_retry_delay_rejected_before_fetch
+12 failed in 0.25s

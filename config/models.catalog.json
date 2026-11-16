@@ -1,0 +1,89 @@
+{
+  "description": "Historical benchmark inventory; not runnable provider profiles. Consult scripts and raw results for settings and limitations.",
+  "models": [
+    {
+      "model": "GPT-OSS 20B",
+      "quantization": "MXFP4",
+      "source": "ggml-org/gpt-oss-20b-GGUF",
+      "filename": "gpt-oss-20b-MXFP4.gguf",
+      "recorded_outcome": "pass"
+    },
+    {
+      "model": "GPT-OSS 20B",
+      "quantization": "Q3_K_M",
+      "source": "mradermacher/gpt-oss-20b-GGUF",
+      "filename": "gpt-oss-20b.Q3_K_M.gguf",
+      "recorded_outcome": "resource_guard"
+    },
+    {
+      "model": "GPT-OSS 20B",
+      "quantization": "Q4_K_M",
+      "source": "mradermacher/gpt-oss-20b-GGUF",
+      "filename": "gpt-oss-20b.Q4_K_M.gguf",
+      "recorded_outcome": "incomplete_generation"
+    },
+    {
+      "model": "Qwen3-Coder 30B-A3B",
+      "quantization": "Q2_K",
+      "source": "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+      "filename": "Qwen3-Coder-30B-A3B-Instruct-Q2_K.gguf",
+      "recorded_outcome": "fail"
+    },
+    {
+      "model": "Qwen3-Coder 30B-A3B",
+      "quantization": "Q3_K_S",
+      "source": "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+      "filename": "Qwen3-Coder-30B-A3B-Instruct-Q3_K_S.gguf",
+      "recorded_outcome": "fail"
+    },
+    {
+      "model": "GLM-4.7-Flash 30B-A3B",
+      "quantization": "Q3_K_S",
+      "source": "unsloth/GLM-4.7-Flash-GGUF",
+      "filename": "GLM-4.7-Flash-Q3_K_S.gguf",
+      "recorded_outcome": "fail"
+    },
+    {
+      "model": "GLM-4.7-Flash 30B-A3B",
+      "quantization": "Q2_K",
+      "source": "unsloth/GLM-4.7-Flash-GGUF",
+      "filename": "GLM-4.7-Flash-Q2_K.gguf",
+      "recorded_outcome": "incomplete_generation"
+    },
+    {
+      "model": "GLM-4.7-Flash 30B-A3B",
+      "quantization": "Q4_K_M",
+      "source": "unsloth/GLM-4.7-Flash-GGUF",
+      "filename": "GLM-4.7-Flash-Q4_K_M.gguf",
+      "recorded_outcome": "resource_guard"
+    },
+    {
+      "model": "Qwen3.5 35B-A3B",
+      "quantization": "UD-IQ3_S",
+      "source": "unsloth/Qwen3.5-35B-A3B-GGUF",
+      "filename": "Qwen3.5-35B-A3B-UD-IQ3_S.gguf",
+      "recorded_outcome": "fail"
+    },
+    {
+      "model": "Qwen3.5 35B-A3B",
+      "quantization": "UD-IQ2_M",
+      "source": "unsloth/Qwen3.5-35B-A3B-GGUF",
+      "filename": "Qwen3.5-35B-A3B-UD-IQ2_M.gguf",
+      "recorded_outcome": "fail"
+    },
+    {
+      "model": "Qwen3.5 35B-A3B",
+      "quantization": "Q4_K_M",
+      "source": "unsloth/Qwen3.5-35B-A3B-GGUF",
+      "filename": "Qwen3.5-35B-A3B-Q4_K_M.gguf",
+      "recorded_outcome": "resource_guard"
+    },
+    {
+      "model": "Gemma 4 26B-A4B",
+      "quantization": "Q4_0",
+      "source": "ggml-org/gemma-4-26B-A4B-it-GGUF",
+      "filename": "gemma-4-26B-A4B-it-Q4_0.gguf",
+      "recorded_outcome": "fail_static_gate"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+model,case,attempt,status,error,response_s,actual_input_tokens,actual_output_tokens,generated_tokens_s
+qwen3-coder:30b,mean,0,pass,,40.468952099996386,44,34,10.559225921781602
+qwen3-coder:30b,mean,1,pass,,2.4884750000055647,44,34,14.844905664990648
+qwen3-coder:30b,slugify,0,pass,,9.085461099995882,65,88,16.83657255596582
+qwen3-coder:30b,slugify,1,pass,,4.331515399986529,65,82,19.27428554554908
+qwen3-coder:30b,merge_intervals,0,pass,,11.672714500004076,66,142,14.394059267640401
+qwen3-coder:30b,merge_intervals,1,pass,,7.755597000010312,66,142,18.604095416474948

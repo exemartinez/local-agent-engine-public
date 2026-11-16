@@ -1,0 +1,1 @@
+The prior repair again reached the 4096-token limit without any extracted implementation: the resulting file is empty and all 27 public tests fail due to missing functions. Return a concise complete Python module, without reasoning or Markdown.

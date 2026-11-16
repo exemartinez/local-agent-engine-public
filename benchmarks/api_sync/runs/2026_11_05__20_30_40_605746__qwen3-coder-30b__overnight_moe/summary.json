@@ -1,0 +1,18 @@
+{
+  "model": "qwen3-coder:30b",
+  "status": "preflight_ok",
+  "started": "2026-11-05T20:30:40.606766",
+  "calls": [],
+  "generated_code_executed": false,
+  "correctness": "not evaluated",
+  "limits": {
+    "hours": 8.0,
+    "call_timeout_seconds": 1800,
+    "min_disk_gib": 8,
+    "min_start_available_ram_gib": 5.0,
+    "min_available_ram_mib": 256,
+    "max_gpu_c": 85,
+    "consecutive_samples": 3
+  },
+  "elapsed_seconds": 2.563
+}

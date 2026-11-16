@@ -1,0 +1,134 @@
+{
+  "status": "incomplete_generation",
+  "calls": [
+    {
+      "seconds": 407.25,
+      "usage": {
+        "completion_tokens": 8192,
+        "prompt_tokens": 2539,
+        "total_tokens": 10731,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2539,
+        "prompt_ms": 19827.076,
+        "prompt_per_token_ms": 7.809009846396219,
+        "prompt_per_second": 128.05720823383135,
+        "predicted_n": 8192,
+        "predicted_ms": 387384.133,
+        "predicted_per_token_ms": 47.29387535099499,
+        "predicted_per_second": 21.14438693336983
+      },
+      "finish_reason": "length"
+    },
+    {
+      "seconds": 420.5,
+      "usage": {
+        "completion_tokens": 7761,
+        "prompt_tokens": 8623,
+        "total_tokens": 16384,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 8623,
+        "prompt_ms": 36632.554,
+        "prompt_per_token_ms": 4.248237736286675,
+        "prompt_per_second": 235.39172289215765,
+        "predicted_n": 7761,
+        "predicted_ms": 383493.561,
+        "predicted_per_token_ms": 49.419273324742264,
+        "predicted_per_second": 20.235020321501565
+      },
+      "finish_reason": "length"
+    },
+    {
+      "seconds": 434.7820000000065,
+      "usage": {
+        "completion_tokens": 8192,
+        "prompt_tokens": 8192,
+        "total_tokens": 16384,
+        "prompt_tokens_details": {
+          "cached_tokens": 2492
+        }
+      },
+      "timings": {
+        "cache_n": 2492,
+        "prompt_n": 5700,
+        "prompt_ms": 26337.115,
+        "prompt_per_token_ms": 4.620546491228071,
+        "prompt_per_second": 216.42461598394507,
+        "predicted_n": 8192,
+        "predicted_ms": 407928.297,
+        "predicted_per_token_ms": 49.80201403979978,
+        "predicted_per_second": 20.079509218258522
+      },
+      "finish_reason": "length"
+    },
+    {
+      "seconds": 388.85899999999674,
+      "usage": {
+        "completion_tokens": 7759,
+        "prompt_tokens": 8625,
+        "total_tokens": 16384,
+        "prompt_tokens_details": {
+          "cached_tokens": 8171
+        }
+      },
+      "timings": {
+        "cache_n": 8171,
+        "prompt_n": 454,
+        "prompt_ms": 2773.533,
+        "prompt_per_token_ms": 6.1091035242290745,
+        "prompt_per_second": 163.69013817394637,
+        "predicted_n": 7759,
+        "predicted_ms": 384335.624,
+        "predicted_per_token_ms": 49.54055478216035,
+        "predicted_per_second": 20.185482467792262
+      },
+      "finish_reason": "length"
+    }
+  ],
+  "public_checks": [
+    {
+      "exit_code": null,
+      "output": "INCOMPLETE_GENERATION: no complete answer before the output/context limit",
+      "seconds": 0,
+      "incomplete_generation": true
+    },
+    {
+      "exit_code": null,
+      "output": "INCOMPLETE_GENERATION: no complete answer before the output/context limit",
+      "seconds": 0,
+      "incomplete_generation": true
+    },
+    {
+      "exit_code": null,
+      "output": "INCOMPLETE_GENERATION: no complete answer before the output/context limit",
+      "seconds": 0,
+      "incomplete_generation": true
+    },
+    {
+      "exit_code": null,
+      "output": "INCOMPLETE_GENERATION: no complete answer before the output/context limit",
+      "seconds": 0,
+      "incomplete_generation": true
+    }
+  ],
+  "hidden_check": null,
+  "model": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\model-downloads\\GLM-4.7-Flash-Q2_K.gguf",
+  "manual_interventions": 0,
+  "model_cleanup": "not requested",
+  "context_tokens": 16384,
+  "reasoning_budget_tokens": 2048,
+  "seed": 42,
+  "temperature": 0.0,
+  "test_environment": "Windows host with AST gate and Python socket guard; NOT an OS sandbox",
+  "model_sha256": "96b400bda76c8297a12e6aa4ff894f260baf3e8dd814c8a49cce0d90bf114996",
+  "elapsed_seconds": 1703.453
+}

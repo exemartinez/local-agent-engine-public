@@ -1,0 +1,7 @@
+model,case,attempt,status,error,response_s,actual_input_tokens,actual_output_tokens,generated_tokens_s
+lfm2.5:8b,mean,0,pass,,9.029747299995506,46,224,197.1329476920044
+lfm2.5:8b,mean,1,pass,,1.1584475999989081,46,224,197.85503938551878
+lfm2.5:8b,slugify,0,fail,slugify basic case failed,,,,
+lfm2.5:8b,slugify,1,fail,slugify basic case failed,,,,
+lfm2.5:8b,merge_intervals,0,pass,,2.399323199992068,71,471,201.20913446750922
+lfm2.5:8b,merge_intervals,1,pass,,2.46376450000389,71,471,193.56127262221688

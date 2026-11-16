@@ -1,0 +1,1 @@
+The prior response hit the 4096-token limit inside a <think> block, so the extracted file is not valid Python. Return the full module as concise Python code only, without reasoning or Markdown. It must satisfy the specification and public tests.

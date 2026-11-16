@@ -1,0 +1,135 @@
+{
+  "status": "pass",
+  "calls": [
+    {
+      "seconds": 303.43799999999464,
+      "usage": {
+        "completion_tokens": 6171,
+        "prompt_tokens": 2628,
+        "total_tokens": 8799,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2628,
+        "prompt_ms": 14215.953,
+        "prompt_per_token_ms": 5.409418949771689,
+        "prompt_per_second": 184.8627383616139,
+        "predicted_n": 6171,
+        "predicted_ms": 289195.091,
+        "predicted_per_token_ms": 46.871165478119934,
+        "predicted_per_second": 21.335078609615817
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 284.64000000001397,
+      "usage": {
+        "completion_tokens": 6106,
+        "prompt_tokens": 4388,
+        "total_tokens": 10494,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 4388,
+        "prompt_ms": 13689.904,
+        "prompt_per_token_ms": 3.119850501367366,
+        "prompt_per_second": 320.5281790142575,
+        "predicted_n": 6106,
+        "predicted_ms": 270675.206,
+        "predicted_per_token_ms": 44.33664307944308,
+        "predicted_per_second": 22.554707134867755
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 377.76600000000326,
+      "usage": {
+        "completion_tokens": 8150,
+        "prompt_tokens": 4953,
+        "total_tokens": 13103,
+        "prompt_tokens_details": {
+          "cached_tokens": 60
+        }
+      },
+      "timings": {
+        "cache_n": 60,
+        "prompt_n": 4893,
+        "prompt_ms": 14153.565,
+        "prompt_per_token_ms": 2.892614960147149,
+        "prompt_per_second": 345.70795414441517,
+        "predicted_n": 8150,
+        "predicted_ms": 363390.299,
+        "predicted_per_token_ms": 44.593238311449255,
+        "predicted_per_second": 22.424924447419
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 269.375,
+      "usage": {
+        "completion_tokens": 5724,
+        "prompt_tokens": 4603,
+        "total_tokens": 10327,
+        "prompt_tokens_details": {
+          "cached_tokens": 60
+        }
+      },
+      "timings": {
+        "cache_n": 60,
+        "prompt_n": 4543,
+        "prompt_ms": 13034.065,
+        "prompt_per_token_ms": 2.869043583535109,
+        "prompt_per_second": 348.5482080993151,
+        "predicted_n": 5724,
+        "predicted_ms": 256102.617,
+        "predicted_per_token_ms": 44.74971466014328,
+        "predicted_per_second": 22.34651120335877
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "public_checks": [
+    {
+      "exit_code": 1,
+      "output": "SAFETY_GATE_REJECTED: Top-level assignment must be a literal",
+      "seconds": 0,
+      "safety_rejected": true
+    },
+    {
+      "exit_code": 1,
+      "output": ".........F.................\nERROR: Coverage failure: total of 85 is less than fail-under=90\n                                                                         [100%]\n================================== FAILURES ===================================\n__________________ test_http_error_classification[404-False] __________________\nsync_app.py:46: in fetch_http_page\n    with urlopen(new_url) as resp:\n         ^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1139: in __call__\n    return self._mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1143: in _mock_call\n    return self._execute_mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1198: in _execute_mock_call\n    raise effect\nE   urllib.error.HTTPError: HTTP Error 404: failed\n\nThe above exception was the direct cause of the following exception:\n..\\..\\..\\public_tests\\test_sync.py:84: in test_http_error_classification\n    app.fetch_http_page(\"https://example.test\", None)\nsync_app.py:53: in fetch_http_page\n    raise TransientError(f\"Network error: {exc}\") from exc\nE   sync_app.TransientError: Network error: HTTP Error 404: failed\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     154     23    85%\n---------------------------------\nTOTAL           154     23    85%\nFAIL Required test coverage of 90% not reached. Total coverage: 85.06%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_http_error_classification[404-False]\n1 failed, 26 passed in 0.48s\n",
+      "seconds": 1.7339999999967404
+    },
+    {
+      "exit_code": 1,
+      "output": "...........................\nERROR: Coverage failure: total of 89 is less than fail-under=90\n                                                                         [100%]\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     160     18    89%\n---------------------------------\nTOTAL           160     18    89%\nFAIL Required test coverage of 90% not reached. Total coverage: 88.75%\n27 passed in 0.33s\n",
+      "seconds": 1.5320000000065193
+    },
+    {
+      "exit_code": 0,
+      "output": "...........................                                              [100%]\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     190     18    91%\n---------------------------------\nTOTAL           190     18    91%\nRequired test coverage of 90% reached. Total coverage: 90.53%\n27 passed in 0.35s\n",
+      "seconds": 1.5320000000065193
+    }
+  ],
+  "hidden_check": {
+    "exit_code": 0,
+    "output": "............                                                             [100%]\n12 passed in 0.12s\n",
+    "seconds": 0.9690000000118744
+  },
+  "model": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\model-downloads\\gpt-oss-20b-MXFP4.gguf",
+  "manual_interventions": 0,
+  "model_cleanup": "not requested",
+  "context_tokens": 16384,
+  "reasoning_budget_tokens": 2048,
+  "seed": 44,
+  "temperature": 0.2,
+  "test_environment": "Windows host with AST gate and Python socket guard; NOT an OS sandbox",
+  "model_sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+  "elapsed_seconds": 1294.968
+}

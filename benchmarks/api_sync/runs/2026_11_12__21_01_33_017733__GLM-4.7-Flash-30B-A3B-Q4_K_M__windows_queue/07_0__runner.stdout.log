@@ -1,0 +1,5 @@
+{
+  "run": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_12__21_08_42_967142__GLM-4.7-Flash-Q4_K_M__unattended",
+  "status": "resource_guard",
+  "error": "ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host"
+}

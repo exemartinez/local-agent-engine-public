@@ -1,0 +1,9 @@
+usage: unattended_benchmark.py [-h] --model MODEL --llama-server LLAMA_SERVER
+                               [--port PORT] [--hours HOURS]
+                               [--request-timeout REQUEST_TIMEOUT]
+                               [--min-start-ram-gib MIN_START_RAM_GIB]
+                               [--context-tokens CONTEXT_TOKENS]
+                               [--reasoning-budget REASONING_BUDGET]
+                               [--seed SEED] [--temperature TEMPERATURE]
+                               [--delete-model-after] [--windows-host-gate]
+unattended_benchmark.py: error: invalid hours, startup memory threshold or port

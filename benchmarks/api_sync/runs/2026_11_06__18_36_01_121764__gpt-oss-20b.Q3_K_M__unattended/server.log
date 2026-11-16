@@ -1,0 +1,26 @@
+0.00.806.703 I srv  llama_server: initializing ...
+0.00.807.011 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.815.486 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.834.884 I srv    load_model: loading model 'C:\workspace\local-agent-engine\benchmarks\api_sync\model-downloads\gpt-oss-20b.Q3_K_M.gguf'
+0.06.169.217 W load: setting token '<|constrain|>' (200003) attribute to USER_DEFINED (16), old attributes: 8
+0.06.169.483 W load: setting token '<|message|>' (200008) attribute to USER_DEFINED (16), old attributes: 8
+0.06.170.813 W load: setting token '<|channel|>' (200005) attribute to USER_DEFINED (16), old attributes: 8
+0.06.170.816 W load: setting token '<|start|>' (200006) attribute to USER_DEFINED (16), old attributes: 8
+0.06.170.829 W load: special_eog_ids contains both '<|return|>' and '<|call|>', or '<|calls|>' and '<|flush|>' tokens, removing '<|end|>' token from EOG list
+0.06.233.525 W llama_model_loader: tensor overrides to CPU are used with mmap enabled - consider using --load-mode none for better performance
+0.18.085.671 W resolve_fused_ops: layer 0 is assigned to device Vulkan0 but Flash Attention over K/V rows is assigned to device CPU (usually due to missing support)
+0.18.085.678 W resolve_fused_ops: Flash Attention over K/V rows not supported, set to disabled
+0.18.107.947 I cmn          init: llama threadpool init, n_threads = 8
+0.22.046.842 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+0.22.066.817 I srv  server_run_i: model loaded
+0.22.066.830 I srv  server_on_li: listening on http://127.0.0.1:18080
+0.22.191.575 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+0.22.192.499 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.30.871.102 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =     61, progress = 0.02, t =   8.68 s / 7.03 tokens per second
+0.58.619.979 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2109, progress = 0.80, t =  36.43 s / 57.90 tokens per second
+1.00.387.746 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2112, progress = 0.80, t =  38.19 s / 55.30 tokens per second
+1.01.966.737 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2624, progress = 1.00, t =  39.77 s / 65.97 tokens per second
+1.11.325.878 I slot print_timing: id  0 | task 0 | n_gen =    100, tg =  14.06 t/s, tg_3s =  14.20 t/s
+1.14.370.185 I slot print_timing: id  0 | task 0 | n_gen =    157, tg =  15.47 t/s, tg_3s =  18.72 t/s
+1.17.417.115 I slot print_timing: id  0 | task 0 | n_gen =    214, tg =  16.22 t/s, tg_3s =  18.71 t/s
+1.20.426.244 I slot print_timing: id  0 | task 0 | n_gen =    270, tg =  16.66 t/s, tg_3s =  18.61 t/s

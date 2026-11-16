@@ -1,0 +1,5 @@
+{
+  "run": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_12__12_56_32_802368__gpt-oss-20b.Q3_K_M__unattended",
+  "status": "resource_guard",
+  "error": "ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host"
+}

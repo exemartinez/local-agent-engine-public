@@ -1,0 +1,121 @@
+Return the full corrected sync_app.py as Python code only.
+
+# API-to-SQLite synchronization specification
+
+## Contract
+
+Implement `sync_app.py` using Python's standard library. Expose `sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None) -> int`, `fetch_http_page(url, cursor)`, and `main(argv=None) -> int`. The model may add helpers but must preserve these signatures. `connection` is a `sqlite3.Connection`; `fetch_page(cursor)` returns a decoded page dictionary. `sleep(seconds)` is injectable. The sync result is the number of unique records committed.
+
+Each page has exactly the required keys `items` (list) and `next_cursor` (null or a nonempty string). An item is a dictionary with `id` (nonempty string), `name` (nonempty string), and `updated_at` (nonempty ISO 8601 timestamp including a timezone). Preserve the timestamp text. Extra page or item keys are permitted and ignored. Duplicate IDs across pages are resolved by the last occurrence in fetch order.
+
+Fetch the first page using cursor `None`, then follow `next_cursor` until null. Detect a repeated cursor and raise `ValueError`. Invalid pages or records raise `ValueError`. All pages must be validated before any persistent database change. Upsert into `records(id TEXT PRIMARY KEY, name TEXT NOT NULL, updated_at TEXT NOT NULL)` in one transaction; repeated runs must not duplicate rows. A failed fetch, validation, or database operation leaves the database as it was before the call, including if the table did not previously exist. Do not commit or roll back a transaction already owned by the caller: reject an already-active transaction with `ValueError` before fetching.
+
+Define `TransientError` for retryable fetch failures. Retry each individual page at most `max_attempts` total calls, sleeping `base_delay * 2**(attempt-1)` after each non-final `TransientError`. Other exceptions propagate immediately. Validate `max_attempts` is a positive integer excluding booleans and `base_delay` is a nonnegative finite number before fetching. Log successful completion without logging credentials or record contents.
+
+`fetch_http_page` performs a GET using `urllib.request`, appending a URL-encoded `cursor` query parameter only when cursor is not null, preserving existing query parameters. It decodes UTF-8 JSON. HTTP 429, HTTP 5xx, and `urllib.error.URLError` raise `TransientError`; other HTTP errors propagate. No network access is needed in tests.
+
+CLI: `--url` and `--db` override `SYNC_URL` and `SYNC_DB` environment variables; both are required. `--max-attempts` and `--base-delay` override `SYNC_MAX_ATTEMPTS` and `SYNC_BASE_DELAY`, defaults 3 and 0.1. `main` returns 0 on success, 2 for invalid configuration, 1 for sync failure, and writes useful diagnostics to stderr. Running the file directly exits with that code. Do not log the URL because it may contain credentials.
+
+## Acceptance
+
+Public and hidden tests must pass; line coverage of `sync_app.py` must be at least 90%. Tests must mock all HTTP requests and sleeps, and use in-memory or temporary SQLite databases. A successful run alone does not establish production readiness.
+
+
+# Design and plan
+
+Use a standard-library-only single module for a fair, bounded generation task. Separate HTTP transport, validation, transaction management, retry policy, and CLI orchestration. Fetch and validate into memory before beginning the database transaction; use parameterized SQLite statements and an explicit transaction. Test through dependency injection and mocked `urllib.request.urlopen`. Candidate code may choose its internal design while honoring the public signatures and behavior in `spec.md`.
+
+
+# Tasks
+
+1. Implement transport and transient-error classification.
+2. Implement validated pagination, cursor-cycle detection, and bounded retries.
+3. Implement atomic, idempotent SQLite storage and caller-transaction protection.
+4. Implement environment/CLI configuration, exit codes, and safe logging.
+5. Implement and run tests with mocked HTTP and sleep; measure line coverage.
+
+
+CURRENT CODE:
+```python
+import argparse
+import json
+import os
+import re
+import sqlite3
+import sys
+from urllib.error import HTTPError, URLError
+from urllib.parse import parse_qs, urlsplit
+from urllib.request import urlopen
+
+
+class TransientError(Exception):
+    """Raised for retryable HTTP or network failures."""
+    pass
+
+
+def fetch_http_page(url, cursor):
+    """Fetch a page from the API and return decoded JSON."""
+    params = []
+    if cursor is not None:
+        params.append(f"cursor={cursor}")
+
+    full_url = url
+    if params:
+        try:
+            parsed = urlsplit(url)
+            existing_qs = parse_qs(parsed.query)
+            if existing_qs:
+                new_qs_parts = []
+                for k, v in existing_qs.items():
+                    if isinstance(v, list):
+                        new_qs_parts.extend([f"{k}={val}" for val in v])
+                    else:
+                        new_qs_parts.append(f"{k}={v}")
+
+                new_qs_parts.append(params[0])
+                full_url = f"{parsed.scheme}:{parsed.netloc}{parsed.path}?{'&'.join(new_qs_parts)}"
+        except Exception:
+            try:
+                existing = url.split('?')[1] if '?' in url else ""
+                full_url = f"{url}?{existing}&{params[0]}"
+            except Exception:
+                full_url = f"{url}?{params[0]}"
+
+    try:
+        with urlopen(full_url) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            return data
+    except HTTP
+
+
+PUBLIC TEST FAILURES:
+
+=================================== ERRORS ====================================
+_________________ ERROR collecting public_tests/test_sync.py __________________
+..\..\..\..\..\.venv\Lib\site-packages\_pytest\python.py:528: in importtestmodule
+    mod = import_path(
+..\..\..\..\..\.venv\Lib\site-packages\_pytest\pathlib.py:640: in import_path
+    importlib.import_module(module_name)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+..\..\..\..\..\.venv\Lib\site-packages\_pytest\assertion\rewrite.py:185: in exec_module
+    exec(co, module.__dict__)
+..\..\..\public_tests\test_sync.py:9: in <module>
+    import sync_app as app
+E     File "C:\workspace\local-agent-engine\benchmarks\api_sync\runs\2026_11_05__01_19_04_527992__timed__qwen3.5_4b\attempt_1\sync_app.py", line 1
+E       ```python
+E       ^
+E   SyntaxError: invalid syntax
+=========================== short test summary info ===========================
+ERROR ..\..\..\public_tests\test_sync.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.39s

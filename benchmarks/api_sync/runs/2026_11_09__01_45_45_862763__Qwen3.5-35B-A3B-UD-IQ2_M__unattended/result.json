@@ -1,0 +1,106 @@
+{
+  "status": "fail",
+  "calls": [
+    {
+      "seconds": 147.73399999999674,
+      "usage": {
+        "completion_tokens": 3660,
+        "prompt_tokens": 2677,
+        "total_tokens": 6337,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2677,
+        "prompt_ms": 18409.43,
+        "prompt_per_token_ms": 6.876888307807247,
+        "prompt_per_second": 145.41460544948976,
+        "predicted_n": 3660,
+        "predicted_ms": 129272.528,
+        "predicted_per_token_ms": 35.3300158513255,
+        "predicted_per_second": 28.30454433443121
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 151.15600000001723,
+      "usage": {
+        "completion_tokens": 3829,
+        "prompt_tokens": 5163,
+        "total_tokens": 8992,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 5163,
+        "prompt_ms": 18962.96,
+        "prompt_per_token_ms": 3.6728568661630834,
+        "prompt_per_second": 272.26762066681573,
+        "predicted_n": 3829,
+        "predicted_ms": 132035.127,
+        "predicted_per_token_ms": 34.491934952978056,
+        "predicted_per_second": 28.992284757676643
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 152.21799999999348,
+      "usage": {
+        "completion_tokens": 3872,
+        "prompt_tokens": 5734,
+        "total_tokens": 9606,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 5734,
+        "prompt_ms": 18807.054,
+        "prompt_per_token_ms": 3.279918730380188,
+        "prompt_per_second": 304.88560302958666,
+        "predicted_n": 3872,
+        "predicted_ms": 133227.219,
+        "predicted_per_token_ms": 34.4167447687936,
+        "predicted_per_second": 29.055624136386122
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "public_checks": [
+    {
+      "exit_code": 1,
+      "output": "....F...................F.F\nERROR: Coverage failure: total of 77 is less than fail-under=90\n                                                                         [100%]\n================================== FAILURES ===================================\n_______________________ test_cli_requires_configuration _______________________\n..\\..\\..\\public_tests\\test_sync.py:57: in test_cli_requires_configuration\n    assert app.main([]) == 2\n           ^^^^^^^^^^^^\nsync_app.py:177: in main\n    parser.add_argument(\"--url\", env=\"SYNC_URL\", help=\"API URL\")\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:1482: in add_argument\n    action = action_class(**kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^\nE   TypeError: _StoreAction.__init__() got an unexpected keyword argument 'env'\n_______________________ test_bad_record_rejected[bad3] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n________________________ test_cli_success_and_failure _________________________\n..\\..\\..\\public_tests\\test_sync.py:136: in test_cli_success_and_failure\n    assert app.main([]) == 0\n           ^^^^^^^^^^^^\nsync_app.py:177: in main\n    parser.add_argument(\"--url\", env=\"SYNC_URL\", help=\"API URL\")\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:1482: in add_argument\n    action = action_class(**kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^\nE   TypeError: _StoreAction.__init__() got an unexpected keyword argument 'env'\n============================== warnings summary ===============================\n..\\..\\..\\..\\..\\.venv\\Lib\\site-packages\\_pytest\\cacheprovider.py:487\n  C:\\workspace\\local-agent-engine\\.venv\\Lib\\site-packages\\_pytest\\cacheprovider.py:487: PytestCacheWarning: could not create cache path C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_09__01_45_45_862763__Qwen3.5-35B-A3B-UD-IQ2_M__unattended\\candidate_0.py__host_public\\.pytest_cache\\v\\cache\\nodeids: [WinError 5] Access is denied: 'C:\\\\workspace\\\\local-agent-engine\\\\benchmarks\\\\api_sync\\\\runs\\\\2026_11_09__01_45_45_862763__Qwen3.5-35B-A3B-UD-IQ2_M__unattended\\\\candidate_0.py__host_public\\\\pytest-cache-files-_vj5apjv' -> 'C:\\\\workspace\\\\local-agent-engine\\\\benchmarks\\\\api_sync\\\\runs\\\\2026_11_09__01_45_45_862763__Qwen3.5-35B-A3B-UD-IQ2_M__unattended\\\\candidate_0.py__host_public\\\\.pytest_cache'\n    config.cache.set(\"cache/nodeids\", sorted(str(n) for n in self.cached_nodeids))\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     136     31    77%\n---------------------------------\nTOTAL           136     31    77%\nFAIL Required test coverage of 90% not reached. Total coverage: 77.21%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_cli_requires_configuration - ...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad3] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_cli_success_and_failure - Typ...\n3 failed, 24 passed, 1 warning in 0.55s\n",
+      "seconds": 1.75
+    },
+    {
+      "exit_code": 1,
+      "output": "..........................F                                              [100%]\n================================== FAILURES ===================================\n________________________ test_cli_success_and_failure _________________________\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2546: in _get_value\n    result = type_func(arg_string)\n             ^^^^^^^^^^^^^^^^^^^^^\nE   ValueError: invalid literal for int() with base 10: 'nope'\n\nDuring handling of the above exception, another exception occurred:\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:1943: in _parse_known_args2\n    namespace, args = self._parse_known_args(args, namespace, intermixed)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2184: in _parse_known_args\n    start_index = consume_optional(start_index)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2113: in consume_optional\n    take_action(action, args, option_string)\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2003: in take_action\n    argument_values = self._get_values(action, argument_strings)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2513: in _get_values\n    value = self._get_value(action, arg_string)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2558: in _get_value\n    raise ArgumentError(action, msg % args)\nE   argparse.ArgumentError: argument --max-attempts: invalid int value: 'nope'\n\nDuring handling of the above exception, another exception occurred:\n..\\..\\..\\public_tests\\test_sync.py:141: in test_cli_success_and_failure\n    assert app.main([\"--max-attempts\", \"nope\"]) == 2\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsync_app.py:192: in main\n    args = parser.parse_args(argv)\n           ^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:1904: in parse_args\n    args, argv = self.parse_known_args(args, namespace)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:1914: in parse_known_args\n    return self._parse_known_args2(args, namespace, intermixed=False)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:1945: in _parse_known_args2\n    self.error(str(err))\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2650: in error\n    self.exit(2, _('%(prog)s: error: %(message)s\\n') % args)\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2637: in exit\n    _sys.exit(status)\nE   SystemExit: 2\n---------------------------- Captured stderr call -----------------------------\nusage: __main__.py [-h] [--url URL] [--db DB] [--max-attempts MAX_ATTEMPTS]\n                   [--base-delay BASE_DELAY]\n__main__.py: error: argument --max-attempts: invalid int value: 'nope'\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     144     14    90%\n---------------------------------\nTOTAL           144     14    90%\nRequired test coverage of 90% reached. Total coverage: 90.28%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_cli_success_and_failure - Sys...\n1 failed, 26 passed in 0.46s\n",
+      "seconds": 1.6570000000065193
+    },
+    {
+      "exit_code": 0,
+      "output": "...........................                                              [100%]\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     147     14    90%\n---------------------------------\nTOTAL           147     14    90%\nRequired test coverage of 90% reached. Total coverage: 90.48%\n27 passed in 0.28s\n",
+      "seconds": 1.312000000034459
+    }
+  ],
+  "hidden_check": {
+    "exit_code": 1,
+    "output": "....FFF....F                                                             [100%]\n================================== FAILURES ===================================\n_ test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z] _\n..\\..\\..\\hidden_tests\\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_ test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00] _\n..\\..\\..\\hidden_tests\\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_ test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z] _\n..\\..\\..\\hidden_tests\\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_______________ test_infinite_retry_delay_rejected_before_fetch _______________\n..\\..\\..\\hidden_tests\\test_acceptance.py:73: in test_infinite_retry_delay_rejected_before_fetch\n    fetch.assert_not_called()\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:910: in assert_not_called\n    raise AssertionError(msg)\nE   AssertionError: Expected 'mock' to not have been called. Called 1 times.\nE   Calls: [call(None)].\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_infinite_retry_delay_rejected_before_fetch\n4 failed, 8 passed in 0.27s\n",
+    "seconds": 1.077999999979511
+  },
+  "model": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\model-downloads\\Qwen3.5-35B-A3B-UD-IQ2_M.gguf",
+  "manual_interventions": 0,
+  "model_cleanup": "not requested",
+  "context_tokens": 16384,
+  "reasoning_budget_tokens": 2048,
+  "seed": 42,
+  "temperature": 0.0,
+  "test_environment": "Windows host with AST gate and Python socket guard; NOT an OS sandbox",
+  "model_sha256": "187b5bbb81d7ec1dc228cb04120302cc0d486cb3c988501af87e5f02e15ace0e",
+  "elapsed_seconds": 507.907
+}

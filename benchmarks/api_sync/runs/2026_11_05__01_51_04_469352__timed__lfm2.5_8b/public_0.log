@@ -1,0 +1,13 @@
+
+=================================== ERRORS ====================================
+_________________ ERROR collecting public_tests/test_sync.py __________________
+..\..\..\public_tests\test_sync.py:9: in <module>
+    import sync_app as app
+sync_app.py:88: in <module>
+    fetch_page: Callable[[str, Optional[str]], Dict[str, Any]],
+                ^^^^^^^^
+E   NameError: name 'Callable' is not defined
+=========================== short test summary info ===========================
+ERROR ..\..\..\public_tests\test_sync.py - NameError: name 'Callable' is not ...
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.28s

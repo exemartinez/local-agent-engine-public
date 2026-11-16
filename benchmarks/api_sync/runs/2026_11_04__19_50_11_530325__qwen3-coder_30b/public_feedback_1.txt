@@ -1,0 +1,1 @@
+Corrected public suite: 24 passed, 3 failed. Two failures: timestamps 'not-a-date' and '2026-01-01T00:00:00' must be rejected with ValueError because updated_at must be valid ISO 8601 with timezone. One failure: main(['--max-attempts', 'nope']) must return 2 rather than raise SystemExit. Public coverage was 94%; retain all existing correct behavior.

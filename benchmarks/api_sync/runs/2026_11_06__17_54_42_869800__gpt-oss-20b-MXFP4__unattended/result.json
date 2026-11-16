@@ -1,0 +1,107 @@
+{
+  "status": "pass",
+  "calls": [
+    {
+      "seconds": 301.48499999998603,
+      "usage": {
+        "completion_tokens": 6334,
+        "prompt_tokens": 2628,
+        "total_tokens": 8962,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2628,
+        "prompt_ms": 15380.266,
+        "prompt_per_token_ms": 5.852460426179604,
+        "prompt_per_second": 170.86830617883982,
+        "predicted_n": 6334,
+        "predicted_ms": 286060.004,
+        "predicted_per_token_ms": 45.169746407705674,
+        "predicted_per_second": 22.13871184872108
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 350.0470000000205,
+      "usage": {
+        "completion_tokens": 7562,
+        "prompt_tokens": 4342,
+        "total_tokens": 11904,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 4342,
+        "prompt_ms": 14028.943,
+        "prompt_per_token_ms": 3.230986411791801,
+        "prompt_per_second": 309.5030038970149,
+        "predicted_n": 7562,
+        "predicted_ms": 335872.77,
+        "predicted_per_token_ms": 44.42173918793811,
+        "predicted_per_second": 22.511500411301576
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 106.79700000002049,
+      "usage": {
+        "completion_tokens": 2135,
+        "prompt_tokens": 4498,
+        "total_tokens": 6633,
+        "prompt_tokens_details": {
+          "cached_tokens": 60
+        }
+      },
+      "timings": {
+        "cache_n": 60,
+        "prompt_n": 4438,
+        "prompt_ms": 12958.74,
+        "prompt_per_token_ms": 2.919950428120775,
+        "prompt_per_second": 342.47156745177386,
+        "predicted_n": 2135,
+        "predicted_ms": 93637.447,
+        "predicted_per_token_ms": 43.87884114339269,
+        "predicted_per_second": 22.7900275837294
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "public_checks": [
+    {
+      "exit_code": 1,
+      "output": "SAFETY_GATE_REJECTED: Top-level assignment must be a literal",
+      "seconds": 0,
+      "safety_rejected": true
+    },
+    {
+      "exit_code": 1,
+      "output": "........................F..                                              [100%]\n================================== FAILURES ===================================\n_______________________ test_bad_record_rejected[bad3] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     152     11    93%\n---------------------------------\nTOTAL           152     11    93%\nRequired test coverage of 90% reached. Total coverage: 92.76%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad3] - F...\n1 failed, 26 passed in 0.96s\n",
+      "seconds": 3.0309999999881256
+    },
+    {
+      "exit_code": 0,
+      "output": "...........................                                              [100%]\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     154     11    93%\n---------------------------------\nTOTAL           154     11    93%\nRequired test coverage of 90% reached. Total coverage: 92.86%\n27 passed in 0.28s\n",
+      "seconds": 1.2660000000032596
+    }
+  ],
+  "hidden_check": {
+    "exit_code": 0,
+    "output": "............                                                             [100%]\n12 passed in 0.16s\n",
+    "seconds": 1.0159999999741558
+  },
+  "model": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\model-downloads\\gpt-oss-20b-MXFP4.gguf",
+  "manual_interventions": 0,
+  "model_cleanup": "not requested",
+  "context_tokens": 16384,
+  "reasoning_budget_tokens": 2048,
+  "seed": 43,
+  "temperature": 0.2,
+  "test_environment": "Windows host with AST gate and Python socket guard; NOT an OS sandbox",
+  "model_sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+  "elapsed_seconds": 826.735
+}

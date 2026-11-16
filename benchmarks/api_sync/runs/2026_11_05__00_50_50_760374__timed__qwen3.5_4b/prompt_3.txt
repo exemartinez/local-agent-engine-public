@@ -1,0 +1,277 @@
+Return the full corrected sync_app.py as Python code only.
+
+# API-to-SQLite synchronization specification
+
+## Contract
+
+Implement `sync_app.py` using Python's standard library. Expose `sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None) -> int`, `fetch_http_page(url, cursor)`, and `main(argv=None) -> int`. The model may add helpers but must preserve these signatures. `connection` is a `sqlite3.Connection`; `fetch_page(cursor)` returns a decoded page dictionary. `sleep(seconds)` is injectable. The sync result is the number of unique records committed.
+
+Each page has exactly the required keys `items` (list) and `next_cursor` (null or a nonempty string). An item is a dictionary with `id` (nonempty string), `name` (nonempty string), and `updated_at` (nonempty ISO 8601 timestamp including a timezone). Preserve the timestamp text. Extra page or item keys are permitted and ignored. Duplicate IDs across pages are resolved by the last occurrence in fetch order.
+
+Fetch the first page using cursor `None`, then follow `next_cursor` until null. Detect a repeated cursor and raise `ValueError`. Invalid pages or records raise `ValueError`. All pages must be validated before any persistent database change. Upsert into `records(id TEXT PRIMARY KEY, name TEXT NOT NULL, updated_at TEXT NOT NULL)` in one transaction; repeated runs must not duplicate rows. A failed fetch, validation, or database operation leaves the database as it was before the call, including if the table did not previously exist. Do not commit or roll back a transaction already owned by the caller: reject an already-active transaction with `ValueError` before fetching.
+
+Define `TransientError` for retryable fetch failures. Retry each individual page at most `max_attempts` total calls, sleeping `base_delay * 2**(attempt-1)` after each non-final `TransientError`. Other exceptions propagate immediately. Validate `max_attempts` is a positive integer excluding booleans and `base_delay` is a nonnegative finite number before fetching. Log successful completion without logging credentials or record contents.
+
+`fetch_http_page` performs a GET using `urllib.request`, appending a URL-encoded `cursor` query parameter only when cursor is not null, preserving existing query parameters. It decodes UTF-8 JSON. HTTP 429, HTTP 5xx, and `urllib.error.URLError` raise `TransientError`; other HTTP errors propagate. No network access is needed in tests.
+
+CLI: `--url` and `--db` override `SYNC_URL` and `SYNC_DB` environment variables; both are required. `--max-attempts` and `--base-delay` override `SYNC_MAX_ATTEMPTS` and `SYNC_BASE_DELAY`, defaults 3 and 0.1. `main` returns 0 on success, 2 for invalid configuration, 1 for sync failure, and writes useful diagnostics to stderr. Running the file directly exits with that code. Do not log the URL because it may contain credentials.
+
+## Acceptance
+
+Public and hidden tests must pass; line coverage of `sync_app.py` must be at least 90%. Tests must mock all HTTP requests and sleeps, and use in-memory or temporary SQLite databases. A successful run alone does not establish production readiness.
+
+
+# Design and plan
+
+Use a standard-library-only single module for a fair, bounded generation task. Separate HTTP transport, validation, transaction management, retry policy, and CLI orchestration. Fetch and validate into memory before beginning the database transaction; use parameterized SQLite statements and an explicit transaction. Test through dependency injection and mocked `urllib.request.urlopen`. Candidate code may choose its internal design while honoring the public signatures and behavior in `spec.md`.
+
+
+# Tasks
+
+1. Implement transport and transient-error classification.
+2. Implement validated pagination, cursor-cycle detection, and bounded retries.
+3. Implement atomic, idempotent SQLite storage and caller-transaction protection.
+4. Implement environment/CLI configuration, exit codes, and safe logging.
+5. Implement and run tests with mocked HTTP and sleep; measure line coverage.
+
+
+CURRENT CODE:
+import sqlite3
+import urllib.request
+import urllib.parse
+import json
+import sys
+import os
+import logging
+from typing import Optional, Dict, List, Any
+import time
+
+
+class TransientError(Exception):
+    """Exception for retryable fetch failures."""
+    pass
+
+
+def validate_page(page: Dict[str, Any]) -> None:
+    """Validate a page structure. Raises ValueError if invalid."""
+    if not isinstance(page, dict):
+        raise ValueError("Page must be a dictionary")
+    
+    if "items" not in page or not isinstance(page["items"], list):
+        raise ValueError("Page must contain 'items' as a list")
+    
+    if "next_cursor" not in page:
+        raise ValueError("Page must contain 'next_cursor'")
+    
+    for item in page["items"]:
+        if not isinstance(item, dict):
+            raise ValueError("Item must be a dictionary")
+        
+        if "id" not in item or not item["id"]:
+            raise ValueError("Item must have non-empty 'id'")
+        
+        if "name" not in item or not item["name"]:
+            raise ValueError("Item must have non-empty 'name'")
+        
+        if "updated_at" not in item or not item["updated_at"]:
+            raise ValueError("Item must have non-empty 'updated_at'")
+
+
+def fetch_http_page(url: str, cursor: Optional[str]) -> Dict[str, Any]:
+    """Fetch a page from the API. Raises TransientError on retryable failures."""
+    try:
+        query_params = urllib.parse.urlencode({"cursor": cursor}) if cursor else ""
+        full_url = f"{url}?{query_params}" if query_params else url
+        
+        req = urllib.request.Request(full_url)
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = response.read().decode("utf-8")
+            return json.loads(data)
+    except (urllib.error.URLError, ConnectionError, TimeoutError):
+        raise TransientError(f"Network error while fetching {url}")
+    except json.JSONDecodeError:
+        raise ValueError("Invalid JSON response from API")
+
+
+def sync(connection: sqlite3.Connection, fetch_page: callable, sleep: callable, *, max_attempts: int = 3, base_delay: float = 0.1, logger: Optional[logging.Logger] = None) -> int:
+    """Synchronize records from API to SQLite database."""
+    if not isinstance(max_attempts, int) or max_attempts <= 0 or isinstance(max_attempts, bool):
+        raise ValueError("max_attempts must be a positive integer")
+    
+    if not isinstance(base_delay, (int, float)) or base_delay < 0:
+        raise ValueError("base_delay must be a non-negative number")
+    
+    # Check for active transaction
+    try:
+        connection.execute("BEGIN")
+        raise ValueError("Active transaction detected")
+    except sqlite3.OperationalError:
+        pass
+    
+    all_records = []
+    cursor = None
+    
+    while True:
+        try:
+            page = fetch_page(cursor)
+        except TransientError as e:
+            if logger:
+                logger.warning(f"Transient error fetching page {cursor}: {e}")
+            
+            attempt = 0
+            while attempt < max_attempts:
+                try:
+                    sleep(base_delay * (2 ** attempt))
+                    page = fetch_page(cursor)
+                    break
+                except TransientError as e:
+                    attempt += 1
+                    if attempt >= max_attempts:
+                        raise
+                    time.sleep(base_delay * (2 ** attempt))
+        
+        validate_page(page)
+        
+        for item in page["items"]:
+            all_records.append(item)
+        
+        next_cursor = page.get("next_cursor")
+        if next_cursor is None:
+            break
+        
+        cursor = next_cursor
+    
+    # Upsert records into database
+    try:
+        connection.execute("BEGIN")
+        for record in all_records:
+            connection.execute(
+                "INSERT OR REPLACE INTO records (id, name, updated_at) VALUES (?, ?, ?)",
+                (record["id"], record["name"], record["updated_at"])
+            )
+        connection.commit()
+    except sqlite3.OperationalError as e:
+        raise ValueError(f"Database error: {e}")
+    
+    return len(all_records)
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    """Main entry point for CLI."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Sync API to SQLite")
+    parser.add_argument("--url", help="API URL (overrides SYNC_URL)")
+    parser.add_argument("--db", help="SQLite database path (overrides SYNC_DB)")
+    parser.add_argument("--max-attempts", type=int, default=3, help="Max retry attempts")
+    parser.add_argument("--base-delay", type=float, default=0.1, help="Base delay between retries")
+    
+    args = parser.parse_args(argv)
+    
+    url = os.environ.get("SYNC_URL") or args.url
+    db_path = os.environ.get("SYNC_DB") or args.db
+    
+    if not url or not db_path:
+        print("Error: Both --url and --db are required", file=sys.stderr)
+        return 2
+    
+    try:
+        connection = sqlite3.connect(db_path)
+        result = sync(connection, fetch_http_page, time.sleep, max_attempts=args.max_attempts, base_delay=args.base_delay)
+        connection.close()
+        
+        if result > 0:
+            print(f"Synced {result} records", file=sys.stderr)
+            return 0
+        else:
+            print("No records synced", file=sys.stderr)
+            return 1
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+PUBLIC TEST FAILURES:
+FF...F...F.....F..........F
+ERROR: Coverage failure: total of 55 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+____________________ test_paginated_upsert_and_idempotency ____________________
+..\..\..\public_tests\test_sync.py:26: in test_paginated_upsert_and_idempotency
+    assert app.sync(db, fetch, lambda _: None) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:69: in sync
+    raise ValueError("Active transaction detected")
+E   ValueError: Active transaction detected
+_______________________ test_retry_per_page_and_backoff _______________________
+..\..\..\public_tests\test_sync.py:35: in test_retry_per_page_and_backoff
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:69: in sync
+    raise ValueError("Active transaction detected")
+E   ValueError: Active transaction detected
+___________________ test_http_pagination_and_existing_query ___________________
+..\..\..\public_tests\test_sync.py:72: in test_http_pagination_and_existing_query
+    assert parse_qs(urlsplit(url).query) == {"key": ["value"], "cursor": ["a b"]}
+E   AssertionError: assert {'key': ['value?cursor=a b']} == {'key': ['val...sor': ['a b']}
+E     
+E     Differing items:
+E     {'key': ['value?cursor=a b']} != {'key': ['value']}
+E     Right contains 1 more item:
+E     {'cursor': ['a b']}
+E     Use -v to get more diff
+__________________ test_http_error_classification[404-False] __________________
+sync_app.py:49: in fetch_http_page
+    with urllib.request.urlopen(req, timeout=10) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1198: in _execute_mock_call
+    raise effect
+E   urllib.error.HTTPError: HTTP Error 404: failed
+
+During handling of the above exception, another exception occurred:
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:53: in fetch_http_page
+    raise TransientError(f"Network error while fetching {url}")
+E   sync_app.TransientError: Network error while fetching https://example.test
+_________________ test_exhausted_retries_do_not_create_table __________________
+..\..\..\public_tests\test_sync.py:106: in test_exhausted_retries_do_not_create_table
+    app.sync(db, fetch, lambda _: None, max_attempts=2)
+sync_app.py:69: in sync
+    raise ValueError("Active transaction detected")
+E   ValueError: Active transaction detected
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:136: in test_cli_success_and_failure
+    assert app.main([]) == 0
+E   assert 1 == 0
+E    +  where 1 = <function main at 0x000002520EB40180>([])
+E    +    where <function main at 0x000002520EB40180> = app.main
+---------------------------- Captured stderr call -----------------------------
+Error: Active transaction detected
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py     110     50    55%
+---------------------------------
+TOTAL           110     50    55%
+FAIL Required test coverage of 90% not reached. Total coverage: 54.55%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_http_pagination_and_existing_query
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[404-False]
+FAILED ..\..\..\public_tests\test_sync.py::test_exhausted_retries_do_not_create_table
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - ass...
+6 failed, 21 passed in 0.39s

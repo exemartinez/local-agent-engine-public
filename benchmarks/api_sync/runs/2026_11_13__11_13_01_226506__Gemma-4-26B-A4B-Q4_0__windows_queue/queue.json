@@ -1,0 +1,59 @@
+{
+  "status": "resource_guard",
+  "test_environment": "Windows host, static AST gate and socket guard; not a security sandbox",
+  "models": [
+    {
+      "model": "Gemma 4 26B-A4B",
+      "quantization": "Q4_0",
+      "source": "ggml-org/gemma-4-26B-A4B-it-GGUF",
+      "file": "gemma-4-26B-A4B-it-Q4_0.gguf",
+      "status": "resource_guard",
+      "memory_recovery": {
+        "stable": true,
+        "skipped": true,
+        "reason": "memory stabilization disabled for overcommit run"
+      },
+      "memory_estimate_before_download": {
+        "model_bytes": 14600000000,
+        "available_ram_bytes": 5432422400,
+        "gpu_free_bytes": 7967080448,
+        "ram_reserve_bytes": 1073741824,
+        "gpu_reserve_bytes": 536870912,
+        "context_runtime_reserve_bytes": 1073741824,
+        "paging_allowance_bytes": 1073741824,
+        "estimated_weight_budget_bytes": 11788890112,
+        "fits_estimate": false
+      },
+      "url": "https://huggingface.co/ggml-org/gemma-4-26B-A4B-it-GGUF/resolve/main/gemma-4-26B-A4B-it-Q4_0.gguf",
+      "download_seconds": 261.69,
+      "download_bytes": 14618145824,
+      "sha256": "d208665ab1cd3a69f7a9a4bc59430e8448c8093d9b06334f566ac59d6d504a03",
+      "memory_estimate_before_load": {
+        "model_bytes": 14618145824,
+        "available_ram_bytes": 5934297088,
+        "gpu_free_bytes": 7962886144,
+        "ram_reserve_bytes": 1073741824,
+        "gpu_reserve_bytes": 536870912,
+        "context_runtime_reserve_bytes": 1073741824,
+        "paging_allowance_bytes": 1073741824,
+        "estimated_weight_budget_bytes": 12286570496,
+        "fits_estimate": false
+      },
+      "replicates": [
+        {
+          "run": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_13__11_17_23_505314__gemma-4-26B-A4B-it-Q4_0__unattended",
+          "status": "resource_guard",
+          "seed": 42,
+          "temperature": 0.0,
+          "calls": 0,
+          "seconds": 98.703
+        }
+      ],
+      "benchmark": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_13__11_17_23_505314__gemma-4-26B-A4B-it-Q4_0__unattended",
+      "result_summary": "1/1 runs; 0 passed",
+      "error": "ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host"
+    }
+  ],
+  "download_reserve_gib": 8.5,
+  "allow_memory_overcommit": true
+}

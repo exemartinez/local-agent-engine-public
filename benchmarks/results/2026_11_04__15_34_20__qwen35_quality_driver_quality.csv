@@ -1,0 +1,7 @@
+model,case,attempt,status,error,response_s,actual_input_tokens,actual_output_tokens,generated_tokens_s
+qwen3.5:4b,mean,0,pass,,7.242710600010469,48,34,85.74166540575982
+qwen3.5:4b,mean,1,pass,,0.4882638999988558,48,34,83.08225387493188
+qwen3.5:4b,slugify,0,fail,slugify basic case failed,,,,
+qwen3.5:4b,slugify,1,fail,slugify basic case failed,,,,
+qwen3.5:4b,merge_intervals,0,fail,merge_intervals returned an incorrect result,,,,
+qwen3.5:4b,merge_intervals,1,fail,merge_intervals returned an incorrect result,,,,

@@ -1,0 +1,26 @@
+﻿{
+    "model":  "lfm2.5:8b",
+    "context":  2048,
+    "output_cap":  96,
+    "ttft_deadline_s":  60,
+    "completion_deadline_s":  180,
+    "elapsed_s":  11.789,
+    "first_token_seen":  true,
+    "stop_reason":  null,
+    "probe_result":  {
+                         "status":  "ok",
+                         "model":  "lfm2.5:8b",
+                         "context":  2048,
+                         "cap":  96,
+                         "ttft_s":  10.562802500004182,
+                         "e2e_s":  11.046982700005174,
+                         "actual_input_tokens":  43,
+                         "actual_output_tokens":  96,
+                         "generated_tokens_s":  199.4859081907667,
+                         "done_reason":  "length",
+                         "response":  "\u003cthink\u003e\nThe user asks: \"Return only Python code for this function, with no Markdown:\" and then provides a docstring. So we need to output just the Python code snippet for the function clamp(value, lower, upper) that returns value bounded to inclusive [lower, upper]. No extra text, no markdown formatting. So we should output:\n\ndef clamp(value, lower, upper):\n    \"\"\"Return value bounded to inclusive [lower, upper.]\"\"\"\n    return max"
+                     },
+    "sample_csv":  "C:\\workspace\\local-agent-engine\\benchmarks\\results\\2026_11_04__15_04_14__fallback_probe__lfm2.5_8b.samples.csv",
+    "stdout_log":  "C:\\workspace\\local-agent-engine\\benchmarks\\logs\\2026_11_04__15_04_14__fallback_probe__lfm2.5_8b.stdout.log",
+    "stderr_log":  "C:\\workspace\\local-agent-engine\\benchmarks\\logs\\2026_11_04__15_04_14__fallback_probe__lfm2.5_8b.stderr.log"
+}

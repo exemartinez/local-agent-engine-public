@@ -1,0 +1,207 @@
+{
+  "status": "resource_guard",
+  "test_environment": "Windows host, static AST gate and socket guard; not a security sandbox",
+  "models": [
+    {
+      "model": "GPT-OSS 20B",
+      "quantization": "MXFP4",
+      "source": "ggml-org/gpt-oss-20b-GGUF",
+      "file": "gpt-oss-20b-MXFP4.gguf",
+      "status": "pass",
+      "memory_recovery": {
+        "stable": true,
+        "samples_bytes": [
+          8301969408,
+          7402627072,
+          7387054080,
+          6922924032
+        ],
+        "interval_seconds": 10
+      },
+      "memory_estimate_before_download": {
+        "model_bytes": 12100000000,
+        "available_ram_bytes": 6928805888,
+        "gpu_free_bytes": 7789871104,
+        "ram_reserve_bytes": 1073741824,
+        "gpu_reserve_bytes": 536870912,
+        "context_runtime_reserve_bytes": 1073741824,
+        "paging_allowance_bytes": 1073741824,
+        "estimated_weight_budget_bytes": 13108064256,
+        "fits_estimate": true
+      },
+      "url": "https://huggingface.co/ggml-org/gpt-oss-20b-GGUF/resolve/main/gpt-oss-20b-MXFP4.gguf",
+      "download_seconds": 200.75,
+      "download_bytes": 12109566624,
+      "sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+      "memory_estimate_before_load": {
+        "model_bytes": 12109566624,
+        "available_ram_bytes": 7187222528,
+        "gpu_free_bytes": 7799308288,
+        "ram_reserve_bytes": 1073741824,
+        "gpu_reserve_bytes": 536870912,
+        "context_runtime_reserve_bytes": 1073741824,
+        "paging_allowance_bytes": 1073741824,
+        "estimated_weight_budget_bytes": 13375918080,
+        "fits_estimate": true
+      },
+      "replicates": [
+        {
+          "run": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_06__17_54_42_869800__gpt-oss-20b-MXFP4__unattended",
+          "status": "pass",
+          "seed": 43,
+          "temperature": 0.2,
+          "calls": 3,
+          "seconds": 826.735
+        },
+        {
+          "run": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_06__18_08_51_060905__gpt-oss-20b-MXFP4__unattended",
+          "status": "pass",
+          "seed": 44,
+          "temperature": 0.2,
+          "calls": 4,
+          "seconds": 1294.968
+        }
+      ],
+      "benchmark": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_06__18_08_51_060905__gpt-oss-20b-MXFP4__unattended",
+      "result_summary": "2/2 runs; 2 passed",
+      "between_replicate_recovery": {
+        "stable": true,
+        "samples_bytes": [
+          9489723392,
+          9358409728,
+          9373569024
+        ],
+        "interval_seconds": 10
+      },
+      "repeat_memory_estimate": {
+        "model_bytes": 12109566624,
+        "available_ram_bytes": 9373245440,
+        "gpu_free_bytes": 7799308288,
+        "ram_reserve_bytes": 1073741824,
+        "gpu_reserve_bytes": 536870912,
+        "context_runtime_reserve_bytes": 1073741824,
+        "paging_allowance_bytes": 1073741824,
+        "estimated_weight_budget_bytes": 15561940992,
+        "fits_estimate": true
+      }
+    },
+    {
+      "model": "GPT-OSS 20B",
+      "quantization": "Q3_K_M",
+      "source": "mradermacher/gpt-oss-20b-GGUF",
+      "file": "gpt-oss-20b.Q3_K_M.gguf",
+      "status": "resource_guard",
+      "memory_recovery": {
+        "stable": true,
+        "samples_bytes": [
+          9275842560,
+          9132916736,
+          9139761152
+        ],
+        "interval_seconds": 10
+      },
+      "memory_estimate_before_download": {
+        "model_bytes": 12900000000,
+        "available_ram_bytes": 9127104512,
+        "gpu_free_bytes": 7799308288,
+        "ram_reserve_bytes": 1073741824,
+        "gpu_reserve_bytes": 536870912,
+        "context_runtime_reserve_bytes": 1073741824,
+        "paging_allowance_bytes": 1073741824,
+        "estimated_weight_budget_bytes": 15315800064,
+        "fits_estimate": true
+      },
+      "url": "https://huggingface.co/mradermacher/gpt-oss-20b-GGUF/resolve/main/gpt-oss-20b.Q3_K_M.gguf",
+      "download_seconds": 311.16,
+      "download_bytes": 12916151296,
+      "sha256": "aef48e2caa1db3d7e4853c1649018406f751fbe42eafd6a8a5f70d4e7b71033c",
+      "memory_estimate_before_load": {
+        "model_bytes": 12916151296,
+        "available_ram_bytes": 9113690112,
+        "gpu_free_bytes": 7799308288,
+        "ram_reserve_bytes": 1073741824,
+        "gpu_reserve_bytes": 536870912,
+        "context_runtime_reserve_bytes": 1073741824,
+        "paging_allowance_bytes": 1073741824,
+        "estimated_weight_budget_bytes": 15302385664,
+        "fits_estimate": true
+      },
+      "replicates": [
+        {
+          "run": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_06__18_36_01_121764__gpt-oss-20b.Q3_K_M__unattended",
+          "status": "resource_guard",
+          "seed": 42,
+          "temperature": 0.0,
+          "calls": 0,
+          "seconds": 115.469
+        }
+      ],
+      "benchmark": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_06__18_36_01_121764__gpt-oss-20b.Q3_K_M__unattended",
+      "result_summary": "1/1 runs; 0 passed",
+      "error": "ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host"
+    },
+    {
+      "model": "GPT-OSS 20B",
+      "quantization": "Q4_K_M",
+      "source": "mradermacher/gpt-oss-20b-GGUF",
+      "file": "gpt-oss-20b.Q4_K_M.gguf",
+      "status": "pending"
+    },
+    {
+      "model": "Qwen3-Coder 30B-A3B",
+      "quantization": "Q2_K",
+      "source": "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+      "file": "Qwen3-Coder-30B-A3B-Instruct-Q2_K.gguf",
+      "status": "pending"
+    },
+    {
+      "model": "Qwen3-Coder 30B-A3B",
+      "quantization": "Q3_K_S",
+      "source": "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+      "file": "Qwen3-Coder-30B-A3B-Instruct-Q3_K_S.gguf",
+      "status": "pending"
+    },
+    {
+      "model": "GLM-4.7-Flash 30B-A3B",
+      "quantization": "Q3_K_S",
+      "source": "unsloth/GLM-4.7-Flash-GGUF",
+      "file": "GLM-4.7-Flash-Q3_K_S.gguf",
+      "status": "pending"
+    },
+    {
+      "model": "GLM-4.7-Flash 30B-A3B",
+      "quantization": "Q2_K",
+      "source": "unsloth/GLM-4.7-Flash-GGUF",
+      "file": "GLM-4.7-Flash-Q2_K.gguf",
+      "status": "pending"
+    },
+    {
+      "model": "GLM-4.7-Flash 30B-A3B",
+      "quantization": "Q4_K_M",
+      "source": "unsloth/GLM-4.7-Flash-GGUF",
+      "file": "GLM-4.7-Flash-Q4_K_M.gguf",
+      "status": "pending"
+    },
+    {
+      "model": "Qwen3.5 35B-A3B",
+      "quantization": "UD-IQ3_S",
+      "source": "unsloth/Qwen3.5-35B-A3B-GGUF",
+      "file": "Qwen3.5-35B-A3B-UD-IQ3_S.gguf",
+      "status": "pending"
+    },
+    {
+      "model": "Qwen3.5 35B-A3B",
+      "quantization": "UD-IQ2_M",
+      "source": "unsloth/Qwen3.5-35B-A3B-GGUF",
+      "file": "Qwen3.5-35B-A3B-UD-IQ2_M.gguf",
+      "status": "pending"
+    },
+    {
+      "model": "Qwen3.5 35B-A3B",
+      "quantization": "Q4_K_M",
+      "source": "unsloth/Qwen3.5-35B-A3B-GGUF",
+      "file": "Qwen3.5-35B-A3B-Q4_K_M.gguf",
+      "status": "pending"
+    }
+  ]
+}

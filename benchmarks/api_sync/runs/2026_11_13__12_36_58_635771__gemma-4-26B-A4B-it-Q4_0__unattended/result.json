@@ -1,0 +1,140 @@
+{
+  "status": "fail",
+  "calls": [
+    {
+      "seconds": 236.31300000000192,
+      "usage": {
+        "completion_tokens": 3817,
+        "prompt_tokens": 2990,
+        "total_tokens": 6807,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2990,
+        "prompt_ms": 32782.006,
+        "prompt_per_token_ms": 10.96388160535117,
+        "prompt_per_second": 91.20857338626563,
+        "predicted_n": 3817,
+        "predicted_ms": 203448.856,
+        "predicted_per_token_ms": 53.31468972746331,
+        "predicted_per_second": 18.756556684693276
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 229.35900000000038,
+      "usage": {
+        "completion_tokens": 3994,
+        "prompt_tokens": 4677,
+        "total_tokens": 8671,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 4677,
+        "prompt_ms": 25473.717,
+        "prompt_per_token_ms": 5.446593329057088,
+        "prompt_per_second": 183.60100334003081,
+        "predicted_n": 3994,
+        "predicted_ms": 203182.216,
+        "predicted_per_token_ms": 50.88460205359379,
+        "predicted_per_second": 19.652310515207688
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 228.0779999999977,
+      "usage": {
+        "completion_tokens": 3985,
+        "prompt_tokens": 4854,
+        "total_tokens": 8839,
+        "prompt_tokens_details": {
+          "cached_tokens": 7
+        }
+      },
+      "timings": {
+        "cache_n": 7,
+        "prompt_n": 4847,
+        "prompt_ms": 24067.155,
+        "prompt_per_token_ms": 4.965371363730142,
+        "prompt_per_second": 201.39480549321263,
+        "predicted_n": 3985,
+        "predicted_ms": 203504.613,
+        "predicted_per_token_ms": 51.08047515060241,
+        "predicted_per_second": 19.576951801087674
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 237.71900000000096,
+      "usage": {
+        "completion_tokens": 3982,
+        "prompt_tokens": 6302,
+        "total_tokens": 10284,
+        "prompt_tokens_details": {
+          "cached_tokens": 7
+        }
+      },
+      "timings": {
+        "cache_n": 7,
+        "prompt_n": 6295,
+        "prompt_ms": 33614.731,
+        "prompt_per_token_ms": 5.339909610802224,
+        "prompt_per_second": 187.26908747239418,
+        "predicted_n": 3982,
+        "predicted_ms": 203483.071,
+        "predicted_per_token_ms": 51.113557146445615,
+        "predicted_per_second": 19.564281099335286
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "public_checks": [
+    {
+      "exit_code": 1,
+      "output": "SAFETY_GATE_REJECTED: Forbidden attribute: replace",
+      "seconds": 0,
+      "safety_rejected": true
+    },
+    {
+      "exit_code": 1,
+      "output": "SAFETY_GATE_REJECTED: Forbidden attribute: replace",
+      "seconds": 0,
+      "safety_rejected": true
+    },
+    {
+      "exit_code": 1,
+      "output": "..........................F                                              [100%]\n================================== FAILURES ===================================\n________________________ test_cli_success_and_failure _________________________\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2546: in _get_value\n    result = type_func(arg_string)\n             ^^^^^^^^^^^^^^^^^^^^^\nE   ValueError: invalid literal for int() with base 10: 'nope'\n\nDuring handling of the above exception, another exception occurred:\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:1943: in _parse_known_args2\n    namespace, args = self._parse_known_args(args, namespace, intermixed)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2184: in _parse_known_args\n    start_index = consume_optional(start_index)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2113: in consume_optional\n    take_action(action, args, option_string)\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2003: in take_action\n    argument_values = self._get_values(action, argument_strings)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2513: in _get_values\n    value = self._get_value(action, arg_string)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2558: in _get_value\n    raise ArgumentError(action, msg % args)\nE   argparse.ArgumentError: argument --max-attempts: invalid int value: 'nope'\n\nDuring handling of the above exception, another exception occurred:\n..\\..\\..\\public_tests\\test_sync.py:141: in test_cli_success_and_failure\n    assert app.main([\"--max-attempts\", \"nope\"]) == 2\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsync_app.py:159: in main\n    args = parser.parse_args(argv)\n           ^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:1904: in parse_args\n    args, argv = self.parse_known_args(args, namespace)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:1914: in parse_known_args\n    return self._parse_known_args2(args, namespace, intermixed=False)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:1945: in _parse_known_args2\n    self.error(str(err))\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2650: in error\n    self.exit(2, _('%(prog)s: error: %(message)s\\n') % args)\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\argparse.py:2637: in exit\n    _sys.exit(status)\nE   SystemExit: 2\n---------------------------- Captured stderr call -----------------------------\nusage: __main__.py [-h] [--url URL] [--db DB] [--max-attempts MAX_ATTEMPTS]\n                   [--base-delay BASE_DELAY]\n__main__.py: error: argument --max-attempts: invalid int value: 'nope'\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     130     12    91%\n---------------------------------\nTOTAL           130     12    91%\nRequired test coverage of 90% reached. Total coverage: 90.77%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_cli_success_and_failure - Sys...\n1 failed, 26 passed in 0.96s\n",
+      "seconds": 3.7809999999990396
+    },
+    {
+      "exit_code": 1,
+      "output": "SAFETY_GATE_REJECTED: Forbidden attribute: replace",
+      "seconds": 0,
+      "safety_rejected": true
+    }
+  ],
+  "hidden_check": {
+    "exit_code": 1,
+    "output": "SAFETY_GATE_REJECTED: Forbidden attribute: replace",
+    "seconds": 0,
+    "safety_rejected": true
+  },
+  "model": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\model-downloads\\gemma-4-26B-A4B-it-Q4_0.gguf",
+  "manual_interventions": 0,
+  "model_cleanup": "not requested",
+  "context_tokens": 16384,
+  "reasoning_budget_tokens": 2048,
+  "seed": 42,
+  "temperature": 0.0,
+  "low_ram_guard_disabled": true,
+  "resource_guards_disabled": false,
+  "test_environment": "Windows host with AST gate and Python socket guard; NOT an OS sandbox",
+  "model_sha256": "d208665ab1cd3a69f7a9a4bc59430e8448c8093d9b06334f566ac59d6d504a03",
+  "elapsed_seconds": 998.547
+}

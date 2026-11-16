@@ -1,0 +1,77 @@
+```python
+#!/usr/bin/env python3
+"""
+API-to-SQLite synchronization utility.
+
+The module implements the public API required by the tests:
+    * sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None) -> int
+    * fetch_http_page(url, cursor) -> dict
+    * main(argv=None) -> int
+    * TransientError exception class
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime
+import json
+import math
+import os
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+import sqlite3
+import logging
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Any
+
+# --------------------------------------------------------------------------- #
+# Public exception
+# --------------------------------------------------------------------------- #
+class TransientError(Exception):
+    """Raised for retryable network errors."""
+
+
+# --------------------------------------------------------------------------- #
+# HTTP transport
+# --------------------------------------------------------------------------- #
+def fetch_http_page(url: str, cursor: Optional[str]) -> Dict[str, Any]:
+    """
+    Perform a GET request to *url*, optionally adding a `cursor` query
+    parameter.  The response is expected to be UTF‑8 encoded JSON.
+    HTTP 429, 5xx and urllib.error.URLError are considered transient.
+    """
+    # Build URL with cursor if present
+    parsed = urllib.parse.urlparse(url)
+    query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+    if cursor is not None:
+        query["cursor"] = [cursor]
+    new_query = urllib.parse.urlencode(query, doseq=True)
+    new_url = urllib.parse.urlunparse(
+        (parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment)
+    )
+
+    try:
+        with urllib.request.urlopen(new_url) as resp:
+            data = resp.read().decode("utf-8")
+            return json.loads(data)
+    except urllib.error.HTTPError as e:
+        # Retryable status codes
+        if e.code == 429 or 500 <= e.code < 600:
+            raise TransientError(f"HTTP {e.code}") from e
+        raise
+    except urllib.error.URLError as e:
+        raise TransientError("Network error") from e
+
+
+# --------------------------------------------------------------------------- #
+# Validation helpers
+# --------------------------------------------------------------------------- #
+def _validate_page(page: Any) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+    """
+    Validate a page dictionary.  Returns (items, next_cursor).
+    Raises ValueError on any validation failure.
+    """
+    if not isinstance(page, dict):
+        raise Value

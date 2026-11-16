@@ -1,0 +1,49 @@
+....F...................F.F
+ERROR: Coverage failure: total of 77 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+_______________________ test_cli_requires_configuration _______________________
+..\..\..\public_tests\test_sync.py:57: in test_cli_requires_configuration
+    assert app.main([]) == 2
+           ^^^^^^^^^^^^
+sync_app.py:177: in main
+    parser.add_argument("--url", env="SYNC_URL", help="API URL")
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:1482: in add_argument
+    action = action_class(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: _StoreAction.__init__() got an unexpected keyword argument 'env'
+_______________________ test_bad_record_rejected[bad3] ________________________
+..\..\..\public_tests\test_sync.py:119: in test_bad_record_rejected
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:136: in test_cli_success_and_failure
+    assert app.main([]) == 0
+           ^^^^^^^^^^^^
+sync_app.py:177: in main
+    parser.add_argument("--url", env="SYNC_URL", help="API URL")
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\argparse.py:1482: in add_argument
+    action = action_class(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: _StoreAction.__init__() got an unexpected keyword argument 'env'
+============================== warnings summary ===============================
+..\..\..\..\..\.venv\Lib\site-packages\_pytest\cacheprovider.py:487
+  C:\workspace\local-agent-engine\.venv\Lib\site-packages\_pytest\cacheprovider.py:487: PytestCacheWarning: could not create cache path C:\workspace\local-agent-engine\benchmarks\api_sync\runs\2026_11_09__01_45_45_862763__Qwen3.5-35B-A3B-UD-IQ2_M__unattended\candidate_0.py__host_public\.pytest_cache\v\cache\nodeids: [WinError 5] Access is denied: 'C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_09__01_45_45_862763__Qwen3.5-35B-A3B-UD-IQ2_M__unattended\\candidate_0.py__host_public\\pytest-cache-files-_vj5apjv' -> 'C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_09__01_45_45_862763__Qwen3.5-35B-A3B-UD-IQ2_M__unattended\\candidate_0.py__host_public\\.pytest_cache'
+    config.cache.set("cache/nodeids", sorted(str(n) for n in self.cached_nodeids))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py     136     31    77%
+---------------------------------
+TOTAL           136     31    77%
+FAIL Required test coverage of 90% not reached. Total coverage: 77.21%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_requires_configuration - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad3] - F...
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - Typ...
+3 failed, 24 passed, 1 warning in 0.55s

@@ -1,0 +1,21 @@
+0.01.793.806 I srv  llama_server: initializing ...
+0.01.794.022 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.01.801.406 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.01.823.697 I srv    load_model: loading model 'C:\workspace\local-agent-engine\benchmarks\api_sync\model-downloads\GLM-4.7-Flash-Q2_K.gguf'
+0.06.609.544 W load: special_eot_id is not in special_eog_ids - the tokenizer config may be incorrect
+0.06.609.550 W load: special_eom_id is not in special_eog_ids - the tokenizer config may be incorrect
+0.06.680.185 W llama_model_loader: tensor overrides to CPU are used with mmap enabled - consider using --load-mode none for better performance
+0.19.408.378 I cmn          init: llama threadpool init, n_threads = 8
+0.20.962.573 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+0.21.017.402 W srv          init: chat template supports preserving reasoning, it is enabled by default (may use more tokens, disable via --no-reasoning-preserve)
+0.21.018.194 I srv  server_run_i: model loaded
+0.21.018.208 I srv  server_on_li: listening on http://127.0.0.1:18080
+0.21.092.945 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+0.21.093.410 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.37.762.457 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2048, progress = 0.81, t =  16.67 s / 122.87 tokens per second
+0.44.585.999 I slot print_timing: id  0 | task 0 | n_gen =    100, tg =  20.52 t/s, tg_3s =  20.73 t/s
+0.47.594.065 I slot print_timing: id  0 | task 0 | n_gen =    161, tg =  20.43 t/s, tg_3s =  20.28 t/s
+0.50.624.684 I slot print_timing: id  0 | task 0 | n_gen =    224, tg =  20.53 t/s, tg_3s =  20.79 t/s
+0.53.665.940 I slot print_timing: id  0 | task 0 | n_gen =    289, tg =  20.71 t/s, tg_3s =  21.37 t/s
+0.56.710.371 I slot print_timing: id  0 | task 0 | n_gen =    354, tg =  20.83 t/s, tg_3s =  21.35 t/s
+0.59.732.900 I slot print_timing: id  0 | task 0 | n_gen =    417, tg =  20.83 t/s, tg_3s =  20.84 t/s

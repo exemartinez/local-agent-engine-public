@@ -1,0 +1,360 @@
+Return the full corrected sync_app.py as Python code only.
+
+# API-to-SQLite synchronization specification
+
+## Contract
+
+Implement `sync_app.py` using Python's standard library. Expose `sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None) -> int`, `fetch_http_page(url, cursor)`, and `main(argv=None) -> int`. The model may add helpers but must preserve these signatures. `connection` is a `sqlite3.Connection`; `fetch_page(cursor)` returns a decoded page dictionary. `sleep(seconds)` is injectable. The sync result is the number of unique records committed.
+
+Each page has exactly the required keys `items` (list) and `next_cursor` (null or a nonempty string). An item is a dictionary with `id` (nonempty string), `name` (nonempty string), and `updated_at` (nonempty ISO 8601 timestamp including a timezone). Preserve the timestamp text. Extra page or item keys are permitted and ignored. Duplicate IDs across pages are resolved by the last occurrence in fetch order.
+
+Fetch the first page using cursor `None`, then follow `next_cursor` until null. Detect a repeated cursor and raise `ValueError`. Invalid pages or records raise `ValueError`. All pages must be validated before any persistent database change. Upsert into `records(id TEXT PRIMARY KEY, name TEXT NOT NULL, updated_at TEXT NOT NULL)` in one transaction; repeated runs must not duplicate rows. A failed fetch, validation, or database operation leaves the database as it was before the call, including if the table did not previously exist. Do not commit or roll back a transaction already owned by the caller: reject an already-active transaction with `ValueError` before fetching.
+
+Define `TransientError` for retryable fetch failures. Retry each individual page at most `max_attempts` total calls, sleeping `base_delay * 2**(attempt-1)` after each non-final `TransientError`. Other exceptions propagate immediately. Validate `max_attempts` is a positive integer excluding booleans and `base_delay` is a nonnegative finite number before fetching. Log successful completion without logging credentials or record contents.
+
+`fetch_http_page` performs a GET using `urllib.request`, appending a URL-encoded `cursor` query parameter only when cursor is not null, preserving existing query parameters. It decodes UTF-8 JSON. HTTP 429, HTTP 5xx, and `urllib.error.URLError` raise `TransientError`; other HTTP errors propagate. No network access is needed in tests.
+
+CLI: `--url` and `--db` override `SYNC_URL` and `SYNC_DB` environment variables; both are required. `--max-attempts` and `--base-delay` override `SYNC_MAX_ATTEMPTS` and `SYNC_BASE_DELAY`, defaults 3 and 0.1. `main` returns 0 on success, 2 for invalid configuration, 1 for sync failure, and writes useful diagnostics to stderr. Running the file directly exits with that code. Do not log the URL because it may contain credentials.
+
+## Acceptance
+
+Public and hidden tests must pass; line coverage of `sync_app.py` must be at least 90%. Tests must mock all HTTP requests and sleeps, and use in-memory or temporary SQLite databases. A successful run alone does not establish production readiness.
+
+
+# Design and plan
+
+Use a standard-library-only single module for a fair, bounded generation task. Separate HTTP transport, validation, transaction management, retry policy, and CLI orchestration. Fetch and validate into memory before beginning the database transaction; use parameterized SQLite statements and an explicit transaction. Test through dependency injection and mocked `urllib.request.urlopen`. Candidate code may choose its internal design while honoring the public signatures and behavior in `spec.md`.
+
+
+# Tasks
+
+1. Implement transport and transient-error classification.
+2. Implement validated pagination, cursor-cycle detection, and bounded retries.
+3. Implement atomic, idempotent SQLite storage and caller-transaction protection.
+4. Implement environment/CLI configuration, exit codes, and safe logging.
+5. Implement and run tests with mocked HTTP and sleep; measure line coverage.
+
+
+PUBLIC TEST SOURCE:
+import sqlite3
+import json
+import urllib.request
+from urllib.error import HTTPError, URLError
+from urllib.parse import parse_qs, urlsplit
+from unittest.mock import Mock
+
+import pytest
+import sync_app as app
+
+
+def item(key, name="Name"):
+    return {"id": key, "name": name, "updated_at": "2026-01-01T00:00:00+00:00"}
+
+
+@pytest.fixture
+def db():
+    connection = sqlite3.connect(":memory:")
+    yield connection
+    connection.close()
+
+
+def test_paginated_upsert_and_idempotency(db):
+    pages = {None: {"items": [item("a")], "next_cursor": "next"}, "next": {"items": [item("a", "new"), item("b")], "next_cursor": None}}
+    fetch = Mock(side_effect=lambda cursor: pages[cursor])
+    assert app.sync(db, fetch, lambda _: None) == 2
+    assert db.execute("SELECT id, name FROM records ORDER BY id").fetchall() == [("a", "new"), ("b", "Name")]
+    assert app.sync(db, fetch, lambda _: None) == 2
+    assert db.execute("SELECT count(*) FROM records").fetchone()[0] == 2
+
+
+def test_retry_per_page_and_backoff(db):
+    fetch = Mock(side_effect=[app.TransientError(), app.TransientError(), {"items": [item("a")], "next_cursor": None}])
+    sleep = Mock()
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+    assert [call.args[0] for call in sleep.call_args_list] == [0.25, 0.5]
+
+
+def test_invalid_later_page_leaves_database_unchanged(db):
+    db.execute("CREATE TABLE records (id TEXT PRIMARY KEY, name TEXT NOT NULL, updated_at TEXT NOT NULL)")
+    db.execute("INSERT INTO records VALUES ('old', 'old', '2026-01-01T00:00:00Z')")
+    db.commit()
+    pages = iter([{"items": [item("new")], "next_cursor": "p2"}, {"items": [{"id": "bad"}], "next_cursor": None}])
+    with pytest.raises(ValueError):
+        app.sync(db, lambda _: next(pages), lambda _: None)
+    assert db.execute("SELECT id FROM records").fetchall() == [("old",)]
+
+
+def test_repeated_cursor_rejected(db):
+    with pytest.raises(ValueError):
+        app.sync(db, lambda _: {"items": [], "next_cursor": "same"}, lambda _: None)
+
+
+def test_cli_requires_configuration(monkeypatch, capsys):
+    monkeypatch.delenv("SYNC_URL", raising=False)
+    monkeypatch.delenv("SYNC_DB", raising=False)
+    assert app.main([]) == 2
+    assert capsys.readouterr().err
+
+
+def test_http_pagination_and_existing_query(monkeypatch):
+    response = Mock()
+    response.__enter__ = Mock(return_value=response)
+    response.__exit__ = Mock(return_value=False)
+    response.read.return_value = json.dumps({"items": [], "next_cursor": None}).encode()
+    opener = Mock(return_value=response)
+    monkeypatch.setattr(urllib.request, "urlopen", opener)
+    monkeypatch.setattr(app, "urlopen", opener, raising=False)
+    assert app.fetch_http_page("https://example.test/items?key=value", "a b") == {"items": [], "next_cursor": None}
+    request = opener.call_args.args[0]
+    url = request.full_url if hasattr(request, "full_url") else request
+    assert parse_qs(urlsplit(url).query) == {"key": ["value"], "cursor": ["a b"]}
+    if hasattr(request, "get_method"):
+        assert request.get_method() == "GET"
+
+
+@pytest.mark.parametrize("code,retryable", [(429, True), (500, True), (503, True), (404, False)])
+def test_http_error_classification(monkeypatch, code, retryable):
+    error = HTTPError("https://example.test", code, "failed", {}, None)
+    opener = Mock(side_effect=error)
+    monkeypatch.setattr(urllib.request, "urlopen", opener)
+    monkeypatch.setattr(app, "urlopen", opener, raising=False)
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+        app.fetch_http_page("https://example.test", None)
+
+
+def test_http_network_error_is_transient(monkeypatch):
+    opener = Mock(side_effect=URLError("offline"))
+    monkeypatch.setattr(urllib.request, "urlopen", opener)
+    monkeypatch.setattr(app, "urlopen", opener, raising=False)
+    with pytest.raises(app.TransientError):
+        app.fetch_http_page("https://example.test", None)
+
+
+@pytest.mark.parametrize("kwargs", [{"max_attempts": 0}, {"max_attempts": True}, {"base_delay": -1}, {"base_delay": float("nan")}])
+def test_bad_retry_configuration_fails_before_fetch(db, kwargs):
+    fetch = Mock()
+    with pytest.raises(ValueError):
+        app.sync(db, fetch, lambda _: None, **kwargs)
+    fetch.assert_not_called()
+
+
+def test_exhausted_retries_do_not_create_table(db):
+    fetch = Mock(side_effect=app.TransientError())
+    with pytest.raises(app.TransientError):
+        app.sync(db, fetch, lambda _: None, max_attempts=2)
+    assert fetch.call_count == 2
+    assert db.execute("SELECT name FROM sqlite_master WHERE name='records'").fetchone() is None
+
+
+@pytest.mark.parametrize("bad", [None, {}, {"items": []}, {"items": "bad", "next_cursor": None}, {"items": [], "next_cursor": ""}])
+def test_bad_page_rejected(db, bad):
+    with pytest.raises(ValueError):
+        app.sync(db, lambda _: bad, lambda _: None)
+
+
+@pytest.mark.parametrize("bad", [None, {}, {"id": "a", "name": "n", "updated_at": "not-a-date"}, {"id": "a", "name": "n", "updated_at": "2026-01-01T00:00:00"}])
+def test_bad_record_rejected(db, bad):
+    with pytest.raises(ValueError):
+        app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+
+
+def test_active_transaction_is_preserved(db):
+    db.execute("CREATE TABLE pending (value TEXT)")
+    db.execute("INSERT INTO pending VALUES ('keep')")
+    with pytest.raises(ValueError):
+        app.sync(db, Mock(), lambda _: None)
+    assert db.in_transaction
+    assert db.execute("SELECT value FROM pending").fetchall() == [("keep",)]
+
+
+def test_cli_success_and_failure(monkeypatch, tmp_path, capsys):
+    monkeypatch.setenv("SYNC_URL", "https://example.test")
+    monkeypatch.setenv("SYNC_DB", str(tmp_path / "out.db"))
+    monkeypatch.setattr(app, "fetch_http_page", Mock(return_value={"items": [item("a")], "next_cursor": None}))
+    assert app.main([]) == 0
+    assert sqlite3.connect(tmp_path / "out.db").execute("SELECT count(*) FROM records").fetchone()[0] == 1
+    monkeypatch.setattr(app, "fetch_http_page", Mock(side_effect=RuntimeError("secret")))
+    assert app.main([]) == 1
+    assert capsys.readouterr().err
+    assert app.main(["--max-attempts", "nope"]) == 2
+
+
+CURRENT CODE:
+
+
+
+PUBLIC TEST FAILURES:
+FFFFFFFFFFFFFFFFFFFFFFFFFFF                                              [100%]
+================================== FAILURES ===================================
+____________________ test_paginated_upsert_and_idempotency ____________________
+..\..\..\public_tests\test_sync.py:26: in test_paginated_upsert_and_idempotency
+    assert app.sync(db, fetch, lambda _: None) == 2
+           ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+_______________________ test_retry_per_page_and_backoff _______________________
+..\..\..\public_tests\test_sync.py:33: in test_retry_per_page_and_backoff
+    fetch = Mock(side_effect=[app.TransientError(), app.TransientError(), {"items": [item("a")], "next_cursor": None}])
+                              ^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'TransientError'
+______________ test_invalid_later_page_leaves_database_unchanged ______________
+..\..\..\public_tests\test_sync.py:45: in test_invalid_later_page_leaves_database_unchanged
+    app.sync(db, lambda _: next(pages), lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+________________________ test_repeated_cursor_rejected ________________________
+..\..\..\public_tests\test_sync.py:51: in test_repeated_cursor_rejected
+    app.sync(db, lambda _: {"items": [], "next_cursor": "same"}, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+_______________________ test_cli_requires_configuration _______________________
+..\..\..\public_tests\test_sync.py:57: in test_cli_requires_configuration
+    assert app.main([]) == 2
+           ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'main'
+___________________ test_http_pagination_and_existing_query ___________________
+..\..\..\public_tests\test_sync.py:69: in test_http_pagination_and_existing_query
+    assert app.fetch_http_page("https://example.test/items?key=value", "a b") == {"items": [], "next_cursor": None}
+           ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'fetch_http_page'
+__________________ test_http_error_classification[429-True] ___________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+                       ^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'TransientError'
+__________________ test_http_error_classification[500-True] ___________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+                       ^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'TransientError'
+__________________ test_http_error_classification[503-True] ___________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+                       ^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'TransientError'
+__________________ test_http_error_classification[404-False] __________________
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+    ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'fetch_http_page'
+____________________ test_http_network_error_is_transient _____________________
+..\..\..\public_tests\test_sync.py:91: in test_http_network_error_is_transient
+    with pytest.raises(app.TransientError):
+                       ^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'TransientError'
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs0] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs1] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs2] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs3] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+_________________ test_exhausted_retries_do_not_create_table __________________
+..\..\..\public_tests\test_sync.py:104: in test_exhausted_retries_do_not_create_table
+    fetch = Mock(side_effect=app.TransientError())
+                             ^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'TransientError'
+________________________ test_bad_page_rejected[None] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+________________________ test_bad_page_rejected[bad1] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+________________________ test_bad_page_rejected[bad2] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+________________________ test_bad_page_rejected[bad3] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+________________________ test_bad_page_rejected[bad4] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+_______________________ test_bad_record_rejected[None] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+_______________________ test_bad_record_rejected[bad1] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+_______________________ test_bad_record_rejected[bad2] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+_______________________ test_bad_record_rejected[bad3] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+____________________ test_active_transaction_is_preserved _____________________
+..\..\..\public_tests\test_sync.py:127: in test_active_transaction_is_preserved
+    app.sync(db, Mock(), lambda _: None)
+    ^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'sync'
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:135: in test_cli_success_and_failure
+    monkeypatch.setattr(app, "fetch_http_page", Mock(return_value={"items": [item("a")], "next_cursor": None}))
+E   AttributeError: <module 'sync_app' from 'C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_06__00_51_48_356856__GLM-4.7-Flash-Q3_K_S__unattended\\candidate_0.py__host_public\\sync_app.py'> has no attribute 'fetch_http_page'
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py       0      0   100%
+---------------------------------
+TOTAL             0      0   100%
+Required test coverage of 90% reached. Total coverage: 100.00%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_invalid_later_page_leaves_database_unchanged
+FAILED ..\..\..\public_tests\test_sync.py::test_repeated_cursor_rejected - At...
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_requires_configuration - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_http_pagination_and_existing_query
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[429-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[500-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[503-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[404-False]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_network_error_is_transient
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs0]
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs1]
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs2]
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs3]
+FAILED ..\..\..\public_tests\test_sync.py::test_exhausted_retries_do_not_create_table
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[None] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad1] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad2] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad3] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad4] - Att...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[None] - A...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad1] - A...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad2] - A...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad3] - A...
+FAILED ..\..\..\public_tests\test_sync.py::test_active_transaction_is_preserved
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - Att...
+27 failed in 0.60s

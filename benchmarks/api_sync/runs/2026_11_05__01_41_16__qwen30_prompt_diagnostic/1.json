@@ -1,0 +1,37 @@
+{
+  "request": {
+    "model": "qwen3-coder:30b",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with exactly BLUE_SKY and nothing else."
+      }
+    ],
+    "stream": false,
+    "options": {
+      "num_ctx": 2048,
+      "num_predict": 20,
+      "temperature": 0,
+      "seed": 42
+    },
+    "keep_alive": "2m"
+  },
+  "response": {
+    "model": "qwen3-coder:30b",
+    "created_at": "2026-11-05T04:41:58.2464809Z",
+    "message": {
+      "role": "assistant",
+      "content": "BLUE_SKY"
+    },
+    "done": true,
+    "done_reason": "stop",
+    "total_duration": 4037154400,
+    "load_duration": 38881300,
+    "prompt_eval_count": 18,
+    "prompt_eval_cached_count": 6,
+    "prompt_eval_duration": 3756839000,
+    "eval_count": 4,
+    "eval_duration": 224124000
+  },
+  "seconds": 4.046999999991385
+}

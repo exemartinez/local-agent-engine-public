@@ -1,0 +1,11 @@
+{
+  "model": "qwen3.5:4b",
+  "status": "generated_unvalidated",
+  "calls": 1,
+  "repair_rounds": 0,
+  "human_interventions": 0,
+  "final_validation": "not run: isolated executor required",
+  "done_reason": "length",
+  "output_tokens": 4096,
+  "generation_seconds": 66.70299999999406
+}

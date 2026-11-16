@@ -1,0 +1,64 @@
+F.FF......FF                                                             [100%]
+================================== FAILURES ===================================
+________________ test_database_failure_rolls_back_all_changes _________________
+..\..\..\hidden_tests\test_acceptance.py:16: in test_database_failure_rolls_back_all_changes
+    with pytest.raises(sqlite3.IntegrityError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE IntegrityError
+_________________________ test_retry_resets_per_page __________________________
+..\..\..\hidden_tests\test_acceptance.py:35: in test_retry_resets_per_page
+    assert app.sync(db, fetch, sleep, max_attempts=2, base_delay=0.5) == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:100: in sync
+    page_data = fetch_page(cursor)
+                ^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1202: in _execute_mock_call
+    raise result
+E   sync_app.TransientError
+_________________ test_logging_does_not_include_record_values _________________
+sync_app.py:130: in sync
+    existing_ids = {r[0] for r in connection.execute("SELECT id FROM records").fetchall()}
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   sqlite3.OperationalError: no such table: records
+
+During handling of the above exception, another exception occurred:
+..\..\..\hidden_tests\test_acceptance.py:43: in test_logging_does_not_include_record_values
+    app.sync(db, lambda _: page, lambda _: None, logger=logger)
+sync_app.py:141: in sync
+    raise ValueError("Database operation failed")
+E   ValueError: Database operation failed
+__________________ test_all_server_errors_are_retryable[599] __________________
+..\..\..\hidden_tests\test_acceptance.py:65: in test_all_server_errors_are_retryable
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:46: in fetch_http_page
+    with urlopen(full_url) as response:
+         ^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1198: in _execute_mock_call
+    raise effect
+E   urllib.error.HTTPError: HTTP Error 599: failed
+_______________ test_infinite_retry_delay_rejected_before_fetch _______________
+..\..\..\hidden_tests\test_acceptance.py:73: in test_infinite_retry_delay_rejected_before_fetch
+    fetch.assert_not_called()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:910: in assert_not_called
+    raise AssertionError(msg)
+E   AssertionError: Expected 'mock' to not have been called. Called 1 times.
+E   Calls: [call(None)].
+=========================== short test summary info ===========================
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_database_failure_rolls_back_all_changes
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_retry_resets_per_page
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_logging_does_not_include_record_values
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[599]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_infinite_retry_delay_rejected_before_fetch
+5 failed, 7 passed in 0.36s

@@ -1,0 +1,79 @@
+FF...F...F.....F..........F
+ERROR: Coverage failure: total of 55 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+____________________ test_paginated_upsert_and_idempotency ____________________
+..\..\..\public_tests\test_sync.py:26: in test_paginated_upsert_and_idempotency
+    assert app.sync(db, fetch, lambda _: None) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:69: in sync
+    raise ValueError("Active transaction detected")
+E   ValueError: Active transaction detected
+_______________________ test_retry_per_page_and_backoff _______________________
+..\..\..\public_tests\test_sync.py:35: in test_retry_per_page_and_backoff
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:69: in sync
+    raise ValueError("Active transaction detected")
+E   ValueError: Active transaction detected
+___________________ test_http_pagination_and_existing_query ___________________
+..\..\..\public_tests\test_sync.py:72: in test_http_pagination_and_existing_query
+    assert parse_qs(urlsplit(url).query) == {"key": ["value"], "cursor": ["a b"]}
+E   AssertionError: assert {'key': ['value?cursor=a b']} == {'key': ['val...sor': ['a b']}
+E     
+E     Differing items:
+E     {'key': ['value?cursor=a b']} != {'key': ['value']}
+E     Right contains 1 more item:
+E     {'cursor': ['a b']}
+E     Use -v to get more diff
+__________________ test_http_error_classification[404-False] __________________
+sync_app.py:49: in fetch_http_page
+    with urllib.request.urlopen(req, timeout=10) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1198: in _execute_mock_call
+    raise effect
+E   urllib.error.HTTPError: HTTP Error 404: failed
+
+During handling of the above exception, another exception occurred:
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:53: in fetch_http_page
+    raise TransientError(f"Network error while fetching {url}")
+E   sync_app.TransientError: Network error while fetching https://example.test
+_________________ test_exhausted_retries_do_not_create_table __________________
+..\..\..\public_tests\test_sync.py:106: in test_exhausted_retries_do_not_create_table
+    app.sync(db, fetch, lambda _: None, max_attempts=2)
+sync_app.py:69: in sync
+    raise ValueError("Active transaction detected")
+E   ValueError: Active transaction detected
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:136: in test_cli_success_and_failure
+    assert app.main([]) == 0
+E   assert 1 == 0
+E    +  where 1 = <function main at 0x000002520EB40180>([])
+E    +    where <function main at 0x000002520EB40180> = app.main
+---------------------------- Captured stderr call -----------------------------
+Error: Active transaction detected
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py     110     50    55%
+---------------------------------
+TOTAL           110     50    55%
+FAIL Required test coverage of 90% not reached. Total coverage: 54.55%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_http_pagination_and_existing_query
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[404-False]
+FAILED ..\..\..\public_tests\test_sync.py::test_exhausted_retries_do_not_create_table
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - ass...
+6 failed, 21 passed in 0.39s

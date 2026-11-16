@@ -1,0 +1,4 @@
+"elapsed_s","available_ram_gib","pages_input_s","page_reads_s","gpu_temp_c","gpu_vram_used_mib","gpu_vram_total_mib","gpu_utilization_percent"
+"1.019","5.643","287.51","61.26","53","3973","8192","71"
+"3.768","4.696","1907.03","62.87","54","5051","8192","16"
+"5.959","4.663","148.18","24.86","54","5050","8192","0"

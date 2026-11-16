@@ -1,0 +1,60 @@
+{
+  "status": "complete",
+  "test_environment": "Windows host, static AST gate and socket guard; not a security sandbox",
+  "models": [
+    {
+      "model": "Gemma 4 26B-A4B",
+      "quantization": "Q4_0",
+      "source": "ggml-org/gemma-4-26B-A4B-it-GGUF",
+      "file": "gemma-4-26B-A4B-it-Q4_0.gguf",
+      "status": "fail",
+      "memory_recovery": {
+        "stable": true,
+        "skipped": true,
+        "reason": "memory stabilization disabled for overcommit run"
+      },
+      "memory_estimate_before_download": {
+        "model_bytes": 14600000000,
+        "available_ram_bytes": 11097219072,
+        "gpu_free_bytes": 7995392000,
+        "ram_reserve_bytes": 1073741824,
+        "gpu_reserve_bytes": 536870912,
+        "context_runtime_reserve_bytes": 1073741824,
+        "paging_allowance_bytes": 1073741824,
+        "estimated_weight_budget_bytes": 17481998336,
+        "fits_estimate": true
+      },
+      "url": "https://huggingface.co/ggml-org/gemma-4-26B-A4B-it-GGUF/resolve/main/gemma-4-26B-A4B-it-Q4_0.gguf",
+      "download_seconds": 338.55,
+      "download_bytes": 14618145824,
+      "sha256": "d208665ab1cd3a69f7a9a4bc59430e8448c8093d9b06334f566ac59d6d504a03",
+      "memory_estimate_before_load": {
+        "model_bytes": 14618145824,
+        "available_ram_bytes": 10437545984,
+        "gpu_free_bytes": 7995392000,
+        "ram_reserve_bytes": 1073741824,
+        "gpu_reserve_bytes": 536870912,
+        "context_runtime_reserve_bytes": 1073741824,
+        "paging_allowance_bytes": 1073741824,
+        "estimated_weight_budget_bytes": 16822325248,
+        "fits_estimate": true
+      },
+      "replicates": [
+        {
+          "run": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_13__12_59_19_790365__gemma-4-26B-A4B-it-Q4_0__unattended",
+          "status": "fail",
+          "seed": 42,
+          "temperature": 0.0,
+          "calls": 4,
+          "seconds": 989.953
+        }
+      ],
+      "benchmark": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_13__12_59_19_790365__gemma-4-26B-A4B-it-Q4_0__unattended",
+      "result_summary": "1/1 runs; 0 passed"
+    }
+  ],
+  "download_reserve_gib": 8.5,
+  "allow_memory_overcommit": true,
+  "low_ram_guard_disabled": true,
+  "resource_guards_disabled": true
+}

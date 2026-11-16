@@ -1,0 +1,134 @@
+{
+  "status": "fail",
+  "calls": [
+    {
+      "seconds": 80.46899999998277,
+      "usage": {
+        "completion_tokens": 1321,
+        "prompt_tokens": 2575,
+        "total_tokens": 3896,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2575,
+        "prompt_ms": 27527.984,
+        "prompt_per_token_ms": 10.69047922330097,
+        "prompt_per_second": 93.54117613552813,
+        "predicted_n": 1321,
+        "predicted_ms": 52916.075,
+        "predicted_per_token_ms": 40.087935606060604,
+        "predicted_per_second": 24.94516080416017
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 70.85899999999674,
+      "usage": {
+        "completion_tokens": 1324,
+        "prompt_tokens": 4422,
+        "total_tokens": 5746,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 4422,
+        "prompt_ms": 18203.859,
+        "prompt_per_token_ms": 4.116657394843962,
+        "prompt_per_second": 242.91552686713294,
+        "predicted_n": 1324,
+        "predicted_ms": 52418.371,
+        "predicted_per_token_ms": 39.62083975812547,
+        "predicted_per_second": 25.239242936412506
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 56.17200000002049,
+      "usage": {
+        "completion_tokens": 1324,
+        "prompt_tokens": 4544,
+        "total_tokens": 5868,
+        "prompt_tokens_details": {
+          "cached_tokens": 3030
+        }
+      },
+      "timings": {
+        "cache_n": 3030,
+        "prompt_n": 1514,
+        "prompt_ms": 6674.293,
+        "prompt_per_token_ms": 4.408383751651255,
+        "prompt_per_second": 226.84050580338624,
+        "predicted_n": 1324,
+        "predicted_ms": 49487.429,
+        "predicted_per_token_ms": 37.40546409674981,
+        "predicted_per_second": 26.73406209888172
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 53.43800000002375,
+      "usage": {
+        "completion_tokens": 1324,
+        "prompt_tokens": 4544,
+        "total_tokens": 5868,
+        "prompt_tokens_details": {
+          "cached_tokens": 3943
+        }
+      },
+      "timings": {
+        "cache_n": 3943,
+        "prompt_n": 601,
+        "prompt_ms": 3618.179,
+        "prompt_per_token_ms": 6.02026455906822,
+        "prompt_per_second": 166.10565701696905,
+        "predicted_n": 1324,
+        "predicted_ms": 49808.398,
+        "predicted_per_token_ms": 37.64807105064248,
+        "predicted_per_second": 26.561785825755727
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "public_checks": [
+    {
+      "exit_code": 1,
+      "output": "F......................FF.F\nERROR: Coverage failure: total of 85 is less than fail-under=90\n                                                                         [100%]\n================================== FAILURES ===================================\n____________________ test_paginated_upsert_and_idempotency ____________________\n..\\..\\..\\public_tests\\test_sync.py:26: in test_paginated_upsert_and_idempotency\n    assert app.sync(db, fetch, lambda _: None) == 2\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsync_app.py:67: in sync\n    raise ValueError(\"Repeated cursor detected\")\nE   ValueError: Repeated cursor detected\n_______________________ test_bad_record_rejected[bad2] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_______________________ test_bad_record_rejected[bad3] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n________________________ test_cli_success_and_failure _________________________\n..\\..\\..\\public_tests\\test_sync.py:141: in test_cli_success_and_failure\n    assert app.main([\"--max-attempts\", \"nope\"]) == 2\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsync_app.py:147: in main\n    max_attempts = int(args.get(\"max_attempts\", os.environ.get(\"SYNC_MAX_ATTEMPTS\", 3)))\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   ValueError: invalid literal for int() with base 10: 'nope'\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     131     20    85%\n---------------------------------\nTOTAL           131     20    85%\nFAIL Required test coverage of 90% not reached. Total coverage: 84.73%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_paginated_upsert_and_idempotency\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad2] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad3] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_cli_success_and_failure - Val...\n4 failed, 23 passed in 0.95s\n",
+      "seconds": 3.030999999959022
+    },
+    {
+      "exit_code": 1,
+      "output": "F......................FF.F\nERROR: Coverage failure: total of 86 is less than fail-under=90\n                                                                         [100%]\n================================== FAILURES ===================================\n____________________ test_paginated_upsert_and_idempotency ____________________\n..\\..\\..\\public_tests\\test_sync.py:26: in test_paginated_upsert_and_idempotency\n    assert app.sync(db, fetch, lambda _: None) == 2\nE   AssertionError: assert 3 == 2\nE    +  where 3 = <function sync at 0x00000283999EFB00>(<sqlite3.Connection object at 0x000002839994F2E0>, <Mock id='2764241270784'>, <function test_paginated_upsert_and_idempotency.<locals>.<lambda> at 0x0000028399A3C180>)\nE    +    where <function sync at 0x00000283999EFB00> = app.sync\n_______________________ test_bad_record_rejected[bad2] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_______________________ test_bad_record_rejected[bad3] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n________________________ test_cli_success_and_failure _________________________\n..\\..\\..\\public_tests\\test_sync.py:141: in test_cli_success_and_failure\n    assert app.main([\"--max-attempts\", \"nope\"]) == 2\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsync_app.py:147: in main\n    max_attempts = int(args.get(\"max_attempts\", os.environ.get(\"SYNC_MAX_ATTEMPTS\", 3)))\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   ValueError: invalid literal for int() with base 10: 'nope'\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     131     18    86%\n---------------------------------\nTOTAL           131     18    86%\nFAIL Required test coverage of 90% not reached. Total coverage: 86.26%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_paginated_upsert_and_idempotency\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad2] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad3] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_cli_success_and_failure - Val...\n4 failed, 23 passed in 0.41s\n",
+      "seconds": 1.6410000000032596
+    },
+    {
+      "exit_code": 1,
+      "output": "F......................FF.F\nERROR: Coverage failure: total of 86 is less than fail-under=90\n                                                                         [100%]\n================================== FAILURES ===================================\n____________________ test_paginated_upsert_and_idempotency ____________________\n..\\..\\..\\public_tests\\test_sync.py:26: in test_paginated_upsert_and_idempotency\n    assert app.sync(db, fetch, lambda _: None) == 2\nE   AssertionError: assert 3 == 2\nE    +  where 3 = <function sync at 0x00000219A78CFB00>(<sqlite3.Connection object at 0x00000219A782F2E0>, <Mock id='2309208438736'>, <function test_paginated_upsert_and_idempotency.<locals>.<lambda> at 0x00000219A791C180>)\nE    +    where <function sync at 0x00000219A78CFB00> = app.sync\n_______________________ test_bad_record_rejected[bad2] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_______________________ test_bad_record_rejected[bad3] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n________________________ test_cli_success_and_failure _________________________\n..\\..\\..\\public_tests\\test_sync.py:141: in test_cli_success_and_failure\n    assert app.main([\"--max-attempts\", \"nope\"]) == 2\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsync_app.py:147: in main\n    max_attempts = int(args.get(\"max_attempts\", os.environ.get(\"SYNC_MAX_ATTEMPTS\", 3)))\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   ValueError: invalid literal for int() with base 10: 'nope'\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     131     18    86%\n---------------------------------\nTOTAL           131     18    86%\nFAIL Required test coverage of 90% not reached. Total coverage: 86.26%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_paginated_upsert_and_idempotency\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad2] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad3] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_cli_success_and_failure - Val...\n4 failed, 23 passed in 0.35s\n",
+      "seconds": 1.375
+    },
+    {
+      "exit_code": 1,
+      "output": "F......................FF.F\nERROR: Coverage failure: total of 86 is less than fail-under=90\n                                                                         [100%]\n================================== FAILURES ===================================\n____________________ test_paginated_upsert_and_idempotency ____________________\n..\\..\\..\\public_tests\\test_sync.py:26: in test_paginated_upsert_and_idempotency\n    assert app.sync(db, fetch, lambda _: None) == 2\nE   AssertionError: assert 3 == 2\nE    +  where 3 = <function sync at 0x0000015C3D82FB00>(<sqlite3.Connection object at 0x0000015C3D78F2E0>, <Mock id='1495680579536'>, <function test_paginated_upsert_and_idempotency.<locals>.<lambda> at 0x0000015C3D87C180>)\nE    +    where <function sync at 0x0000015C3D82FB00> = app.sync\n_______________________ test_bad_record_rejected[bad2] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_______________________ test_bad_record_rejected[bad3] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n________________________ test_cli_success_and_failure _________________________\n..\\..\\..\\public_tests\\test_sync.py:141: in test_cli_success_and_failure\n    assert app.main([\"--max-attempts\", \"nope\"]) == 2\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsync_app.py:147: in main\n    max_attempts = int(args.get(\"max_attempts\", os.environ.get(\"SYNC_MAX_ATTEMPTS\", 3)))\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   ValueError: invalid literal for int() with base 10: 'nope'\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     131     18    86%\n---------------------------------\nTOTAL           131     18    86%\nFAIL Required test coverage of 90% not reached. Total coverage: 86.26%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_paginated_upsert_and_idempotency\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad2] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad3] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_cli_success_and_failure - Val...\n4 failed, 23 passed in 0.36s\n",
+      "seconds": 1.375
+    }
+  ],
+  "hidden_check": {
+    "exit_code": 1,
+    "output": "..F.FFFFFFF.                                                             [100%]\n================================== FAILURES ===================================\n_________________________ test_retry_resets_per_page __________________________\n..\\..\\..\\hidden_tests\\test_acceptance.py:36: in test_retry_resets_per_page\n    assert [call.args[0] for call in sleep.call_args_list] == [0.5, 0.5]\nE   assert [0.5] == [0.5, 0.5]\nE     \nE     Right contains one more item: 0.5\nE     Use -v to get more diff\n_ test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z] _\n..\\..\\..\\hidden_tests\\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_ test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00] _\n..\\..\\..\\hidden_tests\\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_ test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z] _\n..\\..\\..\\hidden_tests\\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n__________________ test_all_server_errors_are_retryable[501] __________________\n..\\..\\..\\hidden_tests\\test_acceptance.py:65: in test_all_server_errors_are_retryable\n    app.fetch_http_page(\"https://example.test\", None)\nsync_app.py:33: in fetch_http_page\n    with urllib.request.urlopen(req) as response:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1139: in __call__\n    return self._mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1143: in _mock_call\n    return self._execute_mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1198: in _execute_mock_call\n    raise effect\nE   urllib.error.HTTPError: HTTP Error 501: failed\n__________________ test_all_server_errors_are_retryable[502] __________________\n..\\..\\..\\hidden_tests\\test_acceptance.py:65: in test_all_server_errors_are_retryable\n    app.fetch_http_page(\"https://example.test\", None)\nsync_app.py:33: in fetch_http_page\n    with urllib.request.urlopen(req) as response:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1139: in __call__\n    return self._mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1143: in _mock_call\n    return self._execute_mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1198: in _execute_mock_call\n    raise effect\nE   urllib.error.HTTPError: HTTP Error 502: failed\n__________________ test_all_server_errors_are_retryable[504] __________________\n..\\..\\..\\hidden_tests\\test_acceptance.py:65: in test_all_server_errors_are_retryable\n    app.fetch_http_page(\"https://example.test\", None)\nsync_app.py:33: in fetch_http_page\n    with urllib.request.urlopen(req) as response:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1139: in __call__\n    return self._mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1143: in _mock_call\n    return self._execute_mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1198: in _execute_mock_call\n    raise effect\nE   urllib.error.HTTPError: HTTP Error 504: failed\n__________________ test_all_server_errors_are_retryable[599] __________________\n..\\..\\..\\hidden_tests\\test_acceptance.py:65: in test_all_server_errors_are_retryable\n    app.fetch_http_page(\"https://example.test\", None)\nsync_app.py:33: in fetch_http_page\n    with urllib.request.urlopen(req) as response:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1139: in __call__\n    return self._mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1143: in _mock_call\n    return self._execute_mock_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:1198: in _execute_mock_call\n    raise effect\nE   urllib.error.HTTPError: HTTP Error 599: failed\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_retry_resets_per_page\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_all_server_errors_are_retryable[501]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_all_server_errors_are_retryable[502]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_all_server_errors_are_retryable[504]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_all_server_errors_are_retryable[599]\n8 failed, 4 passed in 0.47s\n",
+    "seconds": 1.3439999999827705
+  },
+  "model": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\model-downloads\\Qwen3-Coder-30B-A3B-Instruct-Q2_K.gguf",
+  "manual_interventions": 0,
+  "model_cleanup": "not requested",
+  "context_tokens": 16384,
+  "reasoning_budget_tokens": 2048,
+  "seed": 42,
+  "temperature": 0.0,
+  "test_environment": "Windows host with AST gate and Python socket guard; NOT an OS sandbox",
+  "model_sha256": "6db9853d31fdb928a731666c9d44e8cdebf52f62f4810cb0908c6c677e6c84b5",
+  "elapsed_seconds": 326.468
+}

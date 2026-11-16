@@ -1,0 +1,11 @@
+{
+  "model": "qwen3-coder:30b",
+  "status": "generated_unvalidated",
+  "calls": 1,
+  "repair_rounds": 0,
+  "human_interventions": 0,
+  "final_validation": "not run: isolated executor required",
+  "done_reason": "stop",
+  "output_tokens": 1381,
+  "generation_seconds": 289.3280000000086
+}

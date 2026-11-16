@@ -1,0 +1,167 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFF
+ERROR: Coverage failure: total of 46 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+____________________ test_paginated_upsert_and_idempotency ____________________
+..\..\..\public_tests\test_sync.py:26: in test_paginated_upsert_and_idempotency
+    assert app.sync(db, fetch, lambda _: None) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: sync() missing 2 required keyword-only arguments: 'max_attempts' and 'base_delay'
+_______________________ test_retry_per_page_and_backoff _______________________
+..\..\..\public_tests\test_sync.py:35: in test_retry_per_page_and_backoff
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:51: in sync
+    if not connection.is_tight():
+           ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'sqlite3.Connection' object has no attribute 'is_tight'
+______________ test_invalid_later_page_leaves_database_unchanged ______________
+..\..\..\public_tests\test_sync.py:45: in test_invalid_later_page_leaves_database_unchanged
+    app.sync(db, lambda _: next(pages), lambda _: None)
+E   TypeError: sync() missing 2 required keyword-only arguments: 'max_attempts' and 'base_delay'
+________________________ test_repeated_cursor_rejected ________________________
+..\..\..\public_tests\test_sync.py:51: in test_repeated_cursor_rejected
+    app.sync(db, lambda _: {"items": [], "next_cursor": "same"}, lambda _: None)
+E   TypeError: sync() missing 2 required keyword-only arguments: 'max_attempts' and 'base_delay'
+_______________________ test_cli_requires_configuration _______________________
+..\..\..\public_tests\test_sync.py:58: in test_cli_requires_configuration
+    assert capsys.readouterr().err
+E   AssertionError: assert ''
+E    +  where '' = CaptureResult(out='', err='').err
+E    +    where CaptureResult(out='', err='') = readouterr()
+E    +      where readouterr = <_pytest.capture.CaptureFixture object at 0x00000225DAA730E0>.readouterr
+___________________ test_http_pagination_and_existing_query ___________________
+..\..\..\public_tests\test_sync.py:69: in test_http_pagination_and_existing_query
+    assert app.fetch_http_page("https://example.test/items?key=value", "a b") == {"items": [], "next_cursor": None}
+E   AssertionError: assert None == {'items': [], 'next_cursor': None}
+E    +  where None = <function fetch_http_page at 0x00000225DAA54360>('https://example.test/items?key=value', 'a b')
+E    +    where <function fetch_http_page at 0x00000225DAA54360> = app.fetch_http_page
+__________________ test_http_error_classification[429-True] ___________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE TransientError
+__________________ test_http_error_classification[500-True] ___________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE TransientError
+__________________ test_http_error_classification[503-True] ___________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE TransientError
+__________________ test_http_error_classification[404-False] __________________
+..\..\..\public_tests\test_sync.py:83: in test_http_error_classification
+    with pytest.raises(app.TransientError if retryable else HTTPError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE HTTPError
+____________________ test_http_network_error_is_transient _____________________
+..\..\..\public_tests\test_sync.py:91: in test_http_network_error_is_transient
+    with pytest.raises(app.TransientError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE TransientError
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs0] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+E   TypeError: sync() missing 1 required keyword-only argument: 'base_delay'
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs1] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+E   TypeError: sync() missing 1 required keyword-only argument: 'base_delay'
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs2] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+E   TypeError: sync() missing 1 required keyword-only argument: 'max_attempts'
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs3] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+E   TypeError: sync() missing 1 required keyword-only argument: 'max_attempts'
+_________________ test_exhausted_retries_do_not_create_table __________________
+..\..\..\public_tests\test_sync.py:106: in test_exhausted_retries_do_not_create_table
+    app.sync(db, fetch, lambda _: None, max_attempts=2)
+E   TypeError: sync() missing 1 required keyword-only argument: 'base_delay'
+________________________ test_bad_page_rejected[None] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+E   TypeError: sync() missing 2 required keyword-only arguments: 'max_attempts' and 'base_delay'
+________________________ test_bad_page_rejected[bad1] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+E   TypeError: sync() missing 2 required keyword-only arguments: 'max_attempts' and 'base_delay'
+________________________ test_bad_page_rejected[bad2] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+E   TypeError: sync() missing 2 required keyword-only arguments: 'max_attempts' and 'base_delay'
+________________________ test_bad_page_rejected[bad3] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+E   TypeError: sync() missing 2 required keyword-only arguments: 'max_attempts' and 'base_delay'
+________________________ test_bad_page_rejected[bad4] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+E   TypeError: sync() missing 2 required keyword-only arguments: 'max_attempts' and 'base_delay'
+_______________________ test_bad_record_rejected[None] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+E   TypeError: sync() missing 2 required keyword-only arguments: 'max_attempts' and 'base_delay'
+_______________________ test_bad_record_rejected[bad1] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+E   TypeError: sync() missing 2 required keyword-only arguments: 'max_attempts' and 'base_delay'
+_______________________ test_bad_record_rejected[bad2] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+E   TypeError: sync() missing 2 required keyword-only arguments: 'max_attempts' and 'base_delay'
+_______________________ test_bad_record_rejected[bad3] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+E   TypeError: sync() missing 2 required keyword-only arguments: 'max_attempts' and 'base_delay'
+____________________ test_active_transaction_is_preserved _____________________
+..\..\..\public_tests\test_sync.py:127: in test_active_transaction_is_preserved
+    app.sync(db, Mock(), lambda _: None)
+E   TypeError: sync() missing 2 required keyword-only arguments: 'max_attempts' and 'base_delay'
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:136: in test_cli_success_and_failure
+    assert app.main([]) == 0
+E   assert 2 == 0
+E    +  where 2 = <function main at 0x00000225DAA56020>([])
+E    +    where <function main at 0x00000225DAA56020> = app.main
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py      71     38    46%
+---------------------------------
+TOTAL            71     38    46%
+FAIL Required test coverage of 90% not reached. Total coverage: 46.48%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_invalid_later_page_leaves_database_unchanged
+FAILED ..\..\..\public_tests\test_sync.py::test_repeated_cursor_rejected - Ty...
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_requires_configuration - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_http_pagination_and_existing_query
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[429-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[500-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[503-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[404-False]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_network_error_is_transient
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs0]
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs1]
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs2]
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs3]
+FAILED ..\..\..\public_tests\test_sync.py::test_exhausted_retries_do_not_create_table
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[None] - Typ...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad1] - Typ...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad2] - Typ...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad3] - Typ...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad4] - Typ...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[None] - T...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad1] - T...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad2] - T...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad3] - T...
+FAILED ..\..\..\public_tests\test_sync.py::test_active_transaction_is_preserved
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - ass...
+27 failed in 0.51s

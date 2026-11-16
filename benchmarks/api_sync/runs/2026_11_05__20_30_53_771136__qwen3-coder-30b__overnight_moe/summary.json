@@ -1,0 +1,41 @@
+{
+  "model": "qwen3-coder:30b",
+  "status": "generation_complete_awaiting_review",
+  "started": "2026-11-05T20:30:53.771136",
+  "calls": [
+    {
+      "attempt": 0,
+      "seconds": 192.969,
+      "first_token_seconds": 86.422,
+      "exit_code": 0,
+      "stop_reason": null,
+      "done_reason": "stop",
+      "output_tokens": 1623,
+      "eval_duration_ns": 99238344000,
+      "tokens_per_second": 16.355
+    }
+  ],
+  "generated_code_executed": false,
+  "correctness": "failed public and hidden checks after manual review",
+  "limits": {
+    "hours": 8.0,
+    "call_timeout_seconds": 28800,
+    "min_disk_gib": 8,
+    "min_start_available_ram_gib": 5.0,
+    "min_available_ram_mib": 256,
+    "max_gpu_c": 85,
+    "consecutive_samples": 3
+  },
+  "elapsed_seconds": 194.407,
+  "manual_validation": {
+    "candidate_matches_previously_reviewed_sha256": "52338b2a586a87578dc786157f04ac35701a88258e08b05f80cedf5bbdf97485",
+    "public_passed": 24,
+    "public_failed": 3,
+    "coverage_percent": 80.41,
+    "hidden_passed": 5,
+    "hidden_failed": 7,
+    "public_log": "reviewed_public.log",
+    "hidden_log": "reviewed_hidden.log",
+    "network_guard": true
+  }
+}

@@ -1,0 +1,41 @@
+FF................F.......F
+ERROR: Coverage failure: total of 87 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+____________________ test_paginated_upsert_and_idempotency ____________________
+..\..\..\public_tests\test_sync.py:26: in test_paginated_upsert_and_idempotency
+    assert app.sync(db, fetch, lambda _: None) == 2
+E   AssertionError: assert 0 == 2
+E    +  where 0 = <function sync at 0x000001D25D5DFA60>(<sqlite3.Connection object at 0x000001D25D5433D0>, <Mock id='2003021167744'>, <function test_paginated_upsert_and_idempotency.<locals>.<lambda> at 0x000001D25D62C220>)
+E    +    where <function sync at 0x000001D25D5DFA60> = app.sync
+_______________________ test_retry_per_page_and_backoff _______________________
+..\..\..\public_tests\test_sync.py:35: in test_retry_per_page_and_backoff
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+E   AssertionError: assert 0 == 1
+E    +  where 0 = <function sync at 0x000001D25D5DFA60>(<sqlite3.Connection object at 0x000001D25D658040>, <Mock id='2003021167408'>, <Mock id='2003021157424'>, max_attempts=3, base_delay=0.25)
+E    +    where <function sync at 0x000001D25D5DFA60> = app.sync
+________________________ test_bad_page_rejected[bad2] _________________________
+..\..\..\public_tests\test_sync.py:113: in test_bad_page_rejected
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:137: in test_cli_success_and_failure
+    assert sqlite3.connect(tmp_path / "out.db").execute("SELECT count(*) FROM records").fetchone()[0] == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   sqlite3.OperationalError: no such table: records
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py     141     19    87%
+---------------------------------
+TOTAL           141     19    87%
+FAIL Required test coverage of 90% not reached. Total coverage: 86.52%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad2] - Fai...
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - sql...
+4 failed, 23 passed in 0.42s

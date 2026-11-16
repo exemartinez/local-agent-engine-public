@@ -1,0 +1,210 @@
+FFFFFFFFFFF.                                                             [100%]
+================================== FAILURES ===================================
+________________ test_database_failure_rolls_back_all_changes _________________
+..\..\..\hidden_tests\test_acceptance.py:17: in test_database_failure_rolls_back_all_changes
+    app.sync(db, lambda _: page, lambda _: None)
+sync_app.py:146: in sync
+    raise ValueError("An active transaction is already in progress")
+E   ValueError: An active transaction is already in progress
+__________________ test_nontransient_failure_is_not_retried ___________________
+..\..\..\hidden_tests\test_acceptance.py:26: in test_nontransient_failure_is_not_retried
+    app.sync(db, fetch, sleep)
+sync_app.py:146: in sync
+    raise ValueError("An active transaction is already in progress")
+E   ValueError: An active transaction is already in progress
+_________________________ test_retry_resets_per_page __________________________
+..\..\..\hidden_tests\test_acceptance.py:35: in test_retry_resets_per_page
+    assert app.sync(db, fetch, sleep, max_attempts=2, base_delay=0.5) == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:146: in sync
+    raise ValueError("An active transaction is already in progress")
+E   ValueError: An active transaction is already in progress
+_________________ test_logging_does_not_include_record_values _________________
+..\..\..\hidden_tests\test_acceptance.py:43: in test_logging_does_not_include_record_values
+    app.sync(db, lambda _: page, lambda _: None, logger=logger)
+sync_app.py:146: in sync
+    raise ValueError("An active transaction is already in progress")
+E   ValueError: An active transaction is already in progress
+_ test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z] _
+..\..\..\hidden_tests\test_acceptance.py:54: in test_invalid_calendar_dates_rejected_without_creating_table
+    fetch.assert_called_once_with(None)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:960: in assert_called_once_with
+    raise AssertionError(msg)
+E   AssertionError: Expected 'mock' to be called once. Called 0 times.
+_ test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00] _
+..\..\..\hidden_tests\test_acceptance.py:54: in test_invalid_calendar_dates_rejected_without_creating_table
+    fetch.assert_called_once_with(None)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:960: in assert_called_once_with
+    raise AssertionError(msg)
+E   AssertionError: Expected 'mock' to be called once. Called 0 times.
+_ test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z] _
+..\..\..\hidden_tests\test_acceptance.py:54: in test_invalid_calendar_dates_rejected_without_creating_table
+    fetch.assert_called_once_with(None)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:960: in assert_called_once_with
+    raise AssertionError(msg)
+E   AssertionError: Expected 'mock' to be called once. Called 0 times.
+__________________ test_all_server_errors_are_retryable[501] __________________
+..\..\..\hidden_tests\test_acceptance.py:65: in test_all_server_errors_are_retryable
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:63: in fetch_http_page
+    with _urlopen(full_url) as response:
+         ^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:515: in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:532: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1392: in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1344: in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1338: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1384: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1333: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1093: in _send_output
+    self.send(msg)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1037: in send
+    self.connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1472: in connect
+    super().connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1003: in connect
+    self.sock = self._create_connection(
+..\..\..\network_guard.py:7: in denied
+    raise RuntimeError("Network connections are disabled in benchmark tests")
+E   RuntimeError: Network connections are disabled in benchmark tests
+__________________ test_all_server_errors_are_retryable[502] __________________
+..\..\..\hidden_tests\test_acceptance.py:65: in test_all_server_errors_are_retryable
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:63: in fetch_http_page
+    with _urlopen(full_url) as response:
+         ^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:515: in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:532: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1392: in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1344: in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1338: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1384: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1333: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1093: in _send_output
+    self.send(msg)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1037: in send
+    self.connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1472: in connect
+    super().connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1003: in connect
+    self.sock = self._create_connection(
+..\..\..\network_guard.py:7: in denied
+    raise RuntimeError("Network connections are disabled in benchmark tests")
+E   RuntimeError: Network connections are disabled in benchmark tests
+__________________ test_all_server_errors_are_retryable[504] __________________
+..\..\..\hidden_tests\test_acceptance.py:65: in test_all_server_errors_are_retryable
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:63: in fetch_http_page
+    with _urlopen(full_url) as response:
+         ^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:515: in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:532: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1392: in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1344: in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1338: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1384: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1333: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1093: in _send_output
+    self.send(msg)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1037: in send
+    self.connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1472: in connect
+    super().connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1003: in connect
+    self.sock = self._create_connection(
+..\..\..\network_guard.py:7: in denied
+    raise RuntimeError("Network connections are disabled in benchmark tests")
+E   RuntimeError: Network connections are disabled in benchmark tests
+__________________ test_all_server_errors_are_retryable[599] __________________
+..\..\..\hidden_tests\test_acceptance.py:65: in test_all_server_errors_are_retryable
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:63: in fetch_http_page
+    with _urlopen(full_url) as response:
+         ^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:515: in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:532: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1392: in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py:1344: in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1338: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1384: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1333: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1093: in _send_output
+    self.send(msg)
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1037: in send
+    self.connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1472: in connect
+    super().connect()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\http\client.py:1003: in connect
+    self.sock = self._create_connection(
+..\..\..\network_guard.py:7: in denied
+    raise RuntimeError("Network connections are disabled in benchmark tests")
+E   RuntimeError: Network connections are disabled in benchmark tests
+=========================== short test summary info ===========================
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_database_failure_rolls_back_all_changes
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_nontransient_failure_is_not_retried
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_retry_resets_per_page
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_logging_does_not_include_record_values
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[501]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[502]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[504]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[599]
+11 failed, 1 passed in 0.71s

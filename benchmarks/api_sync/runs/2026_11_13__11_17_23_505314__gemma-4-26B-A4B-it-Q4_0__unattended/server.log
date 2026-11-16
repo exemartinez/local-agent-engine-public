@@ -1,0 +1,19 @@
+0.00.812.862 I srv  llama_server: initializing ...
+0.00.813.082 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.820.584 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.835.106 I srv    load_model: loading model 'C:\workspace\local-agent-engine\benchmarks\api_sync\model-downloads\gemma-4-26B-A4B-it-Q4_0.gguf'
+0.07.102.655 W load: control-looking token:     50 '<|tool_response>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.07.102.722 W load: control-looking token:    212 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.07.153.025 W load: '</s>' is a normal token here, removing it from EOG list
+0.07.208.258 W llama_model_loader: tensor overrides to CPU are used with mmap enabled - consider using --load-mode none for better performance
+0.19.329.422 W resolve_fused_ops: layer 0 is assigned to device Vulkan0 but Flash Attention over K/V rows is assigned to device CPU (usually due to missing support)
+0.19.329.428 W resolve_fused_ops: Flash Attention over K/V rows not supported, set to disabled
+0.19.366.469 I cmn          init: llama threadpool init, n_threads = 8
+0.22.414.680 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+0.22.440.802 I srv  server_run_i: model loaded
+0.22.440.836 I srv  server_on_li: listening on http://127.0.0.1:18080
+0.23.322.216 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+0.23.323.466 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.51.861.375 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2056, progress = 0.69, t =  28.53 s / 72.05 tokens per second
+0.54.376.655 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2474, progress = 0.83, t =  31.05 s / 79.67 tokens per second
+0.57.440.379 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2986, progress = 1.00, t =  34.12 s / 87.52 tokens per second

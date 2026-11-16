@@ -1,0 +1,220 @@
+Return the complete corrected sync_app.py as Python code only. Address the public test failures and retain all specified behavior.
+
+# API-to-SQLite synchronization specification
+
+## Contract
+
+Implement `sync_app.py` using Python's standard library. Expose `sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None) -> int`, `fetch_http_page(url, cursor)`, and `main(argv=None) -> int`. The model may add helpers but must preserve these signatures. `connection` is a `sqlite3.Connection`; `fetch_page(cursor)` returns a decoded page dictionary. `sleep(seconds)` is injectable. The sync result is the number of unique records committed.
+
+Each page has exactly the required keys `items` (list) and `next_cursor` (null or a nonempty string). An item is a dictionary with `id` (nonempty string), `name` (nonempty string), and `updated_at` (nonempty ISO 8601 timestamp including a timezone). Preserve the timestamp text. Extra page or item keys are permitted and ignored. Duplicate IDs across pages are resolved by the last occurrence in fetch order.
+
+Fetch the first page using cursor `None`, then follow `next_cursor` until null. Detect a repeated cursor and raise `ValueError`. Invalid pages or records raise `ValueError`. All pages must be validated before any persistent database change. Upsert into `records(id TEXT PRIMARY KEY, name TEXT NOT NULL, updated_at TEXT NOT NULL)` in one transaction; repeated runs must not duplicate rows. A failed fetch, validation, or database operation leaves the database as it was before the call, including if the table did not previously exist. Do not commit or roll back a transaction already owned by the caller: reject an already-active transaction with `ValueError` before fetching.
+
+Define `TransientError` for retryable fetch failures. Retry each individual page at most `max_attempts` total calls, sleeping `base_delay * 2**(attempt-1)` after each non-final `TransientError`. Other exceptions propagate immediately. Validate `max_attempts` is a positive integer excluding booleans and `base_delay` is a nonnegative finite number before fetching. Log successful completion without logging credentials or record contents.
+
+`fetch_http_page` performs a GET using `urllib.request`, appending a URL-encoded `cursor` query parameter only when cursor is not null, preserving existing query parameters. It decodes UTF-8 JSON. HTTP 429, HTTP 5xx, and `urllib.error.URLError` raise `TransientError`; other HTTP errors propagate. No network access is needed in tests.
+
+CLI: `--url` and `--db` override `SYNC_URL` and `SYNC_DB` environment variables; both are required. `--max-attempts` and `--base-delay` override `SYNC_MAX_ATTEMPTS` and `SYNC_BASE_DELAY`, defaults 3 and 0.1. `main` returns 0 on success, 2 for invalid configuration, 1 for sync failure, and writes useful diagnostics to stderr. Running the file directly exits with that code. Do not log the URL because it may contain credentials.
+
+## Acceptance
+
+Public and hidden tests must pass; line coverage of `sync_app.py` must be at least 90%. Tests must mock all HTTP requests and sleeps, and use in-memory or temporary SQLite databases. A successful run alone does not establish production readiness.
+
+
+# Design and plan
+
+Use a standard-library-only single module for a fair, bounded generation task. Separate HTTP transport, validation, transaction management, retry policy, and CLI orchestration. Fetch and validate into memory before beginning the database transaction; use parameterized SQLite statements and an explicit transaction. Test through dependency injection and mocked `urllib.request.urlopen`. Candidate code may choose its internal design while honoring the public signatures and behavior in `spec.md`.
+
+
+# Tasks
+
+1. Implement transport and transient-error classification.
+2. Implement validated pagination, cursor-cycle detection, and bounded retries.
+3. Implement atomic, idempotent SQLite storage and caller-transaction protection.
+4. Implement environment/CLI configuration, exit codes, and safe logging.
+5. Implement and run tests with mocked HTTP and sleep; measure line coverage.
+
+
+CURRENT CODE:
+"""Candidate implementation goes here. See spec.md for the public contract."""
+
+import argparse
+import json
+import os
+import sqlite3
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+from typing import Any, Dict, List, Optional, Tuple
+
+class TransientError(Exception):
+    pass
+
+
+def fetch_http_page(url: str, cursor: Optional[str]) -> Dict[str, Any]:
+    if cursor is not None:
+        parsed = urllib.parse.urlparse(url)
+        query_params = urllib.parse.parse_qs(parsed.query)
+        query_params['cursor'] = [cursor]
+        new_query = urllib.parse.urlencode(query_params, doseq=True)
+        url = urllib.parse.urlunparse((
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            new_query,
+            parsed.fragment
+        ))
+    
+    try:
+        response = urllib.request.urlopen(url)
+        data = response.read().decode('utf-8')
+        return json.loads(data)
+    except urllib.error.HTTPError as e:
+        if e.code in (429, 500, 503):
+            raise TransientError() from e
+        raise
+    except urllib.error.URLError as e:
+        raise TransientError() from e
+
+
+def sync(connection: sqlite3.Connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None) -> int:
+    # Validate inputs
+    if not isinstance(max_attempts, int) or max_attempts <= 0 or isinstance(max_attempts, bool):
+        raise ValueError("max_attempts must be a positive integer")
+    if not isinstance(base_delay, (int, float)) or base_delay < 0 or base_delay != base_delay:  # NaN check
+        raise ValueError("base_delay must be a nonnegative finite number")
+    
+    # Check for active transaction
+    if connection.in_transaction:
+        raise ValueError("Database connection has an active transaction")
+    
+    # Fetch all pages
+    pages = []
+    current_cursor = None
+    seen_cursors = set()
+    
+    while True:
+        # Retry logic per page
+        attempt = 0
+        while True:
+            try:
+                page = fetch_page(current_cursor)
+                break
+            except TransientError as e:
+                attempt += 1
+                if attempt >= max_attempts:
+                    raise
+                sleep(base_delay * (2 ** (attempt - 1)))
+        
+        # Validate page structure
+        if not isinstance(page, dict):
+            raise ValueError("Page must be a dictionary")
+        if 'items' not in page or 'next_cursor' not in page:
+            raise ValueError("Page must have 'items' and 'next_cursor' keys")
+        if not isinstance(page['items'], list):
+            raise ValueError("'items' must be a list")
+        if page['next_cursor'] is not None and (not isinstance(page['next_cursor'], str) or not page['next_cursor']):
+            raise ValueError("'next_cursor' must be null or a non-empty string")
+        
+        # Check for repeated cursor
+        if current_cursor in seen_cursors:
+            raise ValueError("Repeated cursor detected")
+        seen_cursors.add(current_cursor)
+        
+        pages.append(page)
+        
+        # Move to next cursor
+        current_cursor = page['next_cursor']
+        if current_cursor is None:
+            break
+    
+    # Validate all items before any database changes
+    records = {}
+    for page in pages:
+        for item in page['items']:
+            # Validate item structure
+            if not isinstance(item, dict):
+                raise ValueError("Item must be a dictionary")
+            if 'id' not in item or 'name' not in item or 'updated_at' not in item:
+                raise ValueError("Item must have 'id', 'name', and 'updated_at'")
+            if not isinstance(item['id'], str) or not item['id']:
+                raise ValueError("'id' must be a non-empty string")
+            if not isinstance(item['name'], str) or not item['name']:
+                raise ValueError("'name' must be a non-empty string")
+            if not isinstance(item['updated_at'], str) or not item['updated_at']:
+                raise ValueError("'updated_at' must be a non-empty string")
+            
+            # Store the latest version of each record
+            records[item['id']] = {
+                'id': item['id'],
+                'name': item['name'],
+                'updated_at': item['updated_at']
+            }
+    
+    # Perform database transaction
+    try:
+        with connection:
+            # Create table if it doesn't exist
+            connection.execute("""
+                CREATE TABLE IF NOT EXISTS records (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            
+            # Upsert records
+            upsert_sql = """
+                INSERT OR REPLACE INTO records (id, name, updated_at)
+                VALUES (?, ?, ?)
+            """
+            for record in records.values():
+                connection.execute(upsert_sql, (record['id'], record['name'], record['updated_at']))
+            
+            return len(records)
+    except Exception:
+        # Any exception during database operation should rollback the transaction
+        raise
+
+
+def main(argv=None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--url", help="Override SYNC_URL environment variable")
+    parser.add_argument("--db", help="Override SYNC_DB environment variable")
+    parser.add_argument("--max-attempts", type=int, help="Override SYNC_MAX_ATTEMPTS environment variable")
+    parser.add_argument("--base-delay", type=float, help="Override SYNC_BASE_DELAY environment variable")
+    
+    args = parser.parse_args(argv)
+    
+    # Get configuration from environment or CLI
+    url = args.url or os.environ.get("SYNC_URL")
+    db_path = args.db or os.environ.get("SYNC_DB")
+    max_attempts = args.max_attempts or int(os.environ.get("SYNC_MAX_ATTEMPTS", 3))
+    base_delay = args.base_delay or float(os.environ.get("SYNC_BASE_DELAY", 0.1))
+    
+    if not url or not db_path:
+        print("Error: --url and --db are required", file=sys.stderr)
+        return 2
+    
+    try:
+        connection = sqlite3.connect(db_path)
+        result = sync(connection, fetch_http_page, time.sleep, max_attempts=max_attempts, base_delay=base_delay)
+        connection.close()
+        return 0
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+PUBLIC FEEDBACK:
+Corrected public suite: 24 passed, 3 failed. Two failures: timestamps 'not-a-date' and '2026-01-01T00:00:00' must be rejected with ValueError because updated_at must be valid ISO 8601 with timezone. One failure: main(['--max-attempts', 'nope']) must return 2 rather than raise SystemExit. Public coverage was 94%; retain all existing correct behavior.

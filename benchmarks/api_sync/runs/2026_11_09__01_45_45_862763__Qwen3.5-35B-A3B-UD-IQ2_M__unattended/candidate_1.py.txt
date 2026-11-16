@@ -1,0 +1,223 @@
+"""sync_app.py - API-to-SQLite synchronization"""
+
+import argparse
+import json
+import logging
+import os
+import re
+import sqlite3
+import sys
+import urllib.request
+import urllib.parse
+from urllib.error import HTTPError, URLError
+
+
+class TransientError(Exception):
+    """Retryable fetch failure."""
+    pass
+
+
+def fetch_http_page(url, cursor):
+    """Fetch a page from the API using GET request."""
+    parsed = urllib.parse.urlparse(url)
+    query_params = urllib.parse.parse_qs(parsed.query)
+    
+    if cursor is not None:
+        query_params['cursor'] = [cursor]
+    
+    new_query = urllib.parse.urlencode(query_params, doseq=True)
+    new_url = urllib.parse.urlunparse(
+        (parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment)
+    )
+    
+    request = urllib.request.Request(new_url)
+    request.get_method = lambda: 'GET'
+    
+    try:
+        with urllib.request.urlopen(request) as response:
+            data = response.read()
+            page = json.loads(data.decode('utf-8'))
+            return page
+    except HTTPError as e:
+        if e.code == 429 or (e.code >= 500 and e.code < 600):
+            raise TransientError(f"HTTP {e.code}")
+        raise
+    except URLError as e:
+        raise TransientError(f"Network error: {e}")
+
+
+def _validate_page(page):
+    """Validate that a page has the required structure."""
+    if not isinstance(page, dict):
+        raise ValueError("Page must be a dictionary")
+    
+    if 'items' not in page:
+        raise ValueError("Page missing 'items' key")
+    
+    if not isinstance(page['items'], list):
+        raise ValueError("'items' must be a list")
+    
+    if 'next_cursor' not in page:
+        raise ValueError("Page missing 'next_cursor' key")
+    
+    cursor = page['next_cursor']
+    if cursor is not None and not isinstance(cursor, str):
+        raise ValueError("'next_cursor' must be null or string")
+    
+    if cursor is not None and cursor == "":
+        raise ValueError("'next_cursor' cannot be empty string")
+
+
+def _validate_item(item):
+    """Validate that an item has the required structure."""
+    if not isinstance(item, dict):
+        raise ValueError("Item must be a dictionary")
+    
+    if 'id' not in item:
+        raise ValueError("Item missing 'id' key")
+    
+    if not isinstance(item['id'], str) or item['id'] == "":
+        raise ValueError("'id' must be nonempty string")
+    
+    if 'name' not in item:
+        raise ValueError("Item missing 'name' key")
+    
+    if not isinstance(item['name'], str) or item['name'] == "":
+        raise ValueError("'name' must be nonempty string")
+    
+    if 'updated_at' not in item:
+        raise ValueError("Item missing 'updated_at' key")
+    
+    if not isinstance(item['updated_at'], str) or item['updated_at'] == "":
+        raise ValueError("'updated_at' must be nonempty string")
+    
+    timestamp = item['updated_at']
+    # Check for ISO 8601 format with timezone
+    # Must contain 'T' and a timezone indicator (Z or +/- offset)
+    if 'T' not in timestamp:
+        raise ValueError("'updated_at' must be ISO 8601 timestamp")
+    
+    # Check for timezone: ends with Z or has +HH:MM or -HH:MM
+    # Regex to match ISO 8601 with timezone
+    if not re.match(r".*T.*(?:Z|[+-]\d{2}:\d{2})$", timestamp):
+        raise ValueError("'updated_at' must include timezone")
+
+
+def sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None):
+    """Synchronize API data to SQLite database."""
+    if not isinstance(max_attempts, int) or isinstance(max_attempts, bool):
+        raise ValueError("max_attempts must be a positive integer")
+    if max_attempts <= 0:
+        raise ValueError("max_attempts must be positive")
+    
+    if not isinstance(base_delay, (int, float)) or isinstance(base_delay, bool):
+        raise ValueError("base_delay must be a nonnegative finite number")
+    if base_delay < 0:
+        raise ValueError("base_delay must be nonnegative")
+    if base_delay != base_delay:
+        raise ValueError("base_delay must be finite")
+    
+    if connection.in_transaction:
+        raise ValueError("Connection has an active transaction")
+    
+    all_items = []
+    seen_cursors = set()
+    cursor = None
+    
+    while True:
+        page = None
+        for attempt in range(max_attempts):
+            try:
+                page = fetch_page(cursor)
+                break
+            except TransientError:
+                if attempt < max_attempts - 1:
+                    sleep(base_delay * (2 ** attempt))
+                else:
+                    raise
+        
+        _validate_page(page)
+        
+        if cursor is not None:
+            if cursor in seen_cursors:
+                raise ValueError("Repeated cursor detected")
+            seen_cursors.add(cursor)
+        
+        for item in page['items']:
+            _validate_item(item)
+            all_items.append(item)
+        
+        cursor = page['next_cursor']
+        if cursor is None:
+            break
+    
+    try:
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS records (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+        
+        for item in all_items:
+            connection.execute("""
+                INSERT OR REPLACE INTO records (id, name, updated_at)
+                VALUES (?, ?, ?)
+            """, (item['id'], item['name'], item['updated_at']))
+        
+        connection.commit()
+        
+        cursor = connection.execute("SELECT COUNT(DISTINCT id) FROM records")
+        count = cursor.fetchone()[0]
+        
+        if logger:
+            logger.info("Sync completed successfully")
+        
+        return count
+    
+    except Exception:
+        connection.rollback()
+        raise
+
+
+def main(argv=None):
+    """CLI entry point."""
+    parser = argparse.ArgumentParser(description="Sync API data to SQLite")
+    parser.add_argument("--url", help="API URL")
+    parser.add_argument("--db", help="Database path")
+    parser.add_argument("--max-attempts", type=int, default=3, help="Max retry attempts")
+    parser.add_argument("--base-delay", type=float, default=0.1, help="Base delay for retries")
+    
+    args = parser.parse_args(argv)
+    
+    # Check environment variables if CLI args not provided
+    url = args.url or os.environ.get("SYNC_URL")
+    db = args.db or os.environ.get("SYNC_DB")
+    max_attempts = args.max_attempts if args.max_attempts is not None else int(os.environ.get("SYNC_MAX_ATTEMPTS", 3))
+    base_delay = args.base_delay if args.base_delay is not None else float(os.environ.get("SYNC_BASE_DELAY", 0.1))
+    
+    if not url or not db:
+        sys.stderr.write("Error: --url and --db are required\n")
+        return 2
+    
+    try:
+        connection = sqlite3.connect(db)
+        result = sync(
+            connection,
+            lambda cursor: fetch_http_page(url, cursor),
+            lambda seconds: None,
+            max_attempts=max_attempts,
+            base_delay=base_delay
+        )
+        connection.close()
+        return 0
+    except TransientError:
+        sys.stderr.write("Error: Sync failed due to transient error\n")
+        return 1
+    except ValueError as e:
+        sys.stderr.write(f"Error: {e}\n")
+        return 2
+    except Exception as e:
+        sys.stderr.write(f"Error: {e}\n")
+        return 1

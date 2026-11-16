@@ -1,0 +1,13 @@
+
+=================================== ERRORS ====================================
+_________________ ERROR collecting public_tests/test_sync.py __________________
+..\..\..\public_tests\test_sync.py:9: in <module>
+    import sync_app as app
+sync_app.py:2: in <module>
+    parser.add_argument("--url", env_var="SYNC_URL", help="API URL (env: SYNC_URL)")
+    ^^^^^^
+E   NameError: name 'parser' is not defined
+=========================== short test summary info ===========================
+ERROR ..\..\..\public_tests\test_sync.py - NameError: name 'parser' is not de...
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.28s

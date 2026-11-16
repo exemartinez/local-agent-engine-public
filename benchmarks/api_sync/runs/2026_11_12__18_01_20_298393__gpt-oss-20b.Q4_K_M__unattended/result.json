@@ -1,0 +1,134 @@
+{
+  "status": "incomplete_generation",
+  "calls": [
+    {
+      "seconds": 583.8600000000151,
+      "usage": {
+        "completion_tokens": 8192,
+        "prompt_tokens": 2628,
+        "total_tokens": 10820,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2628,
+        "prompt_ms": 34930.064,
+        "prompt_per_token_ms": 13.291500761035007,
+        "prompt_per_second": 75.23604880884272,
+        "predicted_n": 8192,
+        "predicted_ms": 548815.634,
+        "predicted_per_token_ms": 67.00227493590526,
+        "predicted_per_second": 14.92486637142702
+      },
+      "finish_reason": "length"
+    },
+    {
+      "seconds": 568.8280000000086,
+      "usage": {
+        "completion_tokens": 8192,
+        "prompt_tokens": 2564,
+        "total_tokens": 10756,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2564,
+        "prompt_ms": 15270.518,
+        "prompt_per_token_ms": 5.955740249609985,
+        "prompt_per_second": 167.90524067356458,
+        "predicted_n": 8192,
+        "predicted_ms": 553217.228,
+        "predicted_per_token_ms": 67.53964448785253,
+        "predicted_per_second": 14.806118800045757
+      },
+      "finish_reason": "length"
+    },
+    {
+      "seconds": 541.625,
+      "usage": {
+        "completion_tokens": 8002,
+        "prompt_tokens": 2564,
+        "total_tokens": 10566,
+        "prompt_tokens_details": {
+          "cached_tokens": 2559
+        }
+      },
+      "timings": {
+        "cache_n": 2559,
+        "prompt_n": 5,
+        "prompt_ms": 276.196,
+        "prompt_per_token_ms": 55.239200000000004,
+        "prompt_per_second": 18.103086214137786,
+        "predicted_n": 8002,
+        "predicted_ms": 541098.32,
+        "predicted_per_token_ms": 67.62883639545056,
+        "predicted_per_second": 14.786591834179047
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 567.7820000000065,
+      "usage": {
+        "completion_tokens": 8192,
+        "prompt_tokens": 4387,
+        "total_tokens": 12579,
+        "prompt_tokens_details": {
+          "cached_tokens": 2047
+        }
+      },
+      "timings": {
+        "cache_n": 2047,
+        "prompt_n": 2340,
+        "prompt_ms": 12438.351,
+        "prompt_per_token_ms": 5.315534615384616,
+        "prompt_per_second": 188.12783141430884,
+        "predicted_n": 8192,
+        "predicted_ms": 554956.006,
+        "predicted_per_token_ms": 67.75192357465511,
+        "predicted_per_second": 14.759728539634905
+      },
+      "finish_reason": "length"
+    }
+  ],
+  "public_checks": [
+    {
+      "exit_code": null,
+      "output": "INCOMPLETE_GENERATION: no complete answer before the output/context limit",
+      "seconds": 0,
+      "incomplete_generation": true
+    },
+    {
+      "exit_code": null,
+      "output": "INCOMPLETE_GENERATION: no complete answer before the output/context limit",
+      "seconds": 0,
+      "incomplete_generation": true
+    },
+    {
+      "exit_code": 1,
+      "output": "SAFETY_GATE_REJECTED: Global/nonlocal declarations are outside the allowed subset",
+      "seconds": 0,
+      "safety_rejected": true
+    },
+    {
+      "exit_code": null,
+      "output": "INCOMPLETE_GENERATION: no complete answer before the output/context limit",
+      "seconds": 0,
+      "incomplete_generation": true
+    }
+  ],
+  "hidden_check": null,
+  "model": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\model-downloads\\gpt-oss-20b.Q4_K_M.gguf",
+  "manual_interventions": 0,
+  "model_cleanup": "not requested",
+  "context_tokens": 16384,
+  "reasoning_budget_tokens": 2048,
+  "seed": 42,
+  "temperature": 0.0,
+  "test_environment": "Windows host with AST gate and Python socket guard; NOT an OS sandbox",
+  "model_sha256": "c23665cf43a6696faa72e6a19f8d64a9a06887f145a7a46e5e061607ff418101",
+  "elapsed_seconds": 2327.312
+}

@@ -1,0 +1,11 @@
+{
+  "status": "error",
+  "calls": [],
+  "public_checks": [],
+  "hidden_check": null,
+  "model": "benchmarks\\api_sync\\model-downloads\\gpt-oss-20b-MXFP4.gguf",
+  "manual_interventions": 0,
+  "note": "Model file is never deleted automatically; cleanup is a separate explicit step.",
+  "error": "RuntimeError: Docker is not installed or is not on PATH",
+  "elapsed_seconds": 0.016
+}

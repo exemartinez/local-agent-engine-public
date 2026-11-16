@@ -1,0 +1,20 @@
+0.01.816.626 I srv  llama_server: initializing ...
+0.01.816.841 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.01.824.714 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.01.840.198 I srv    load_model: loading model 'C:\workspace\local-agent-engine\benchmarks\api_sync\model-downloads\Qwen3-Coder-30B-A3B-Instruct-Q3_K_S.gguf'
+0.05.039.685 W load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.05.105.523 W llama_model_loader: tensor overrides to CPU are used with mmap enabled - consider using --load-mode none for better performance
+0.17.442.123 W resolve_fused_ops: layer 0 is assigned to device Vulkan0 but Flash Attention over K/V rows is assigned to device CPU (usually due to missing support)
+0.17.442.129 W resolve_fused_ops: Flash Attention over K/V rows not supported, set to disabled
+0.17.493.108 I cmn          init: llama threadpool init, n_threads = 8
+0.18.942.560 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+0.18.962.384 I srv  server_run_i: model loaded
+0.18.962.400 I srv  server_on_li: listening on http://127.0.0.1:18080
+0.19.152.769 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+0.19.153.054 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.48.928.834 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2048, progress = 0.80, t =  29.77 s / 68.79 tokens per second
+0.56.566.466 I slot print_timing: id  0 | task 0 | n_gen =    100, tg =  21.19 t/s, tg_3s =  21.41 t/s
+0.59.607.879 I slot print_timing: id  0 | task 0 | n_gen =    166, tg =  21.39 t/s, tg_3s =  21.68 t/s
+1.02.622.263 I slot print_timing: id  0 | task 0 | n_gen =    230, tg =  21.34 t/s, tg_3s =  21.23 t/s
+1.05.664.104 I slot print_timing: id  0 | task 0 | n_gen =    298, tg =  21.57 t/s, tg_3s =  22.35 t/s
+1.08.696.436 I slot print_timing: id  0 | task 0 | n_gen =    367, tg =  21.78 t/s, tg_3s =  22.75 t/s

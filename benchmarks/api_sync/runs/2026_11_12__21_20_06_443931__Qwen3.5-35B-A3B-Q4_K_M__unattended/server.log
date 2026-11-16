@@ -1,0 +1,13 @@
+0.01.801.341 I srv  llama_server: initializing ...
+0.01.801.545 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.01.809.352 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.01.831.570 I srv    load_model: loading model 'C:\workspace\local-agent-engine\benchmarks\api_sync\model-downloads\Qwen3.5-35B-A3B-Q4_K_M.gguf'
+0.06.986.957 W llama_model_loader: tensor overrides to CPU are used with mmap enabled - consider using --load-mode none for better performance
+0.20.410.598 W resolve_fused_ops: layer 3 is assigned to device Vulkan0 but Flash Attention over K/V rows is assigned to device CPU (usually due to missing support)
+0.20.410.606 W resolve_fused_ops: Flash Attention over K/V rows not supported, set to disabled
+0.20.476.616 I cmn          init: llama threadpool init, n_threads = 8
+0.22.130.209 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+0.22.156.595 I srv  server_run_i: model loaded
+0.22.156.608 I srv  server_on_li: listening on http://127.0.0.1:18080
+0.23.107.225 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+0.23.108.235 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0

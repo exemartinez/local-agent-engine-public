@@ -1,0 +1,207 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFF                                              [100%]
+================================== FAILURES ===================================
+____________________ test_paginated_upsert_and_idempotency ____________________
+..\..\..\public_tests\test_sync.py:26: in test_paginated_upsert_and_idempotency
+    assert app.sync(db, fetch, lambda _: None) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+_______________________ test_retry_per_page_and_backoff _______________________
+..\..\..\public_tests\test_sync.py:35: in test_retry_per_page_and_backoff
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+______________ test_invalid_later_page_leaves_database_unchanged ______________
+..\..\..\public_tests\test_sync.py:45: in test_invalid_later_page_leaves_database_unchanged
+    app.sync(db, lambda _: next(pages), lambda _: None)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+________________________ test_repeated_cursor_rejected ________________________
+..\..\..\public_tests\test_sync.py:51: in test_repeated_cursor_rejected
+    app.sync(db, lambda _: {"items": [], "next_cursor": "same"}, lambda _: None)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+_______________________ test_cli_requires_configuration _______________________
+..\..\..\public_tests\test_sync.py:57: in test_cli_requires_configuration
+    assert app.main([]) == 2
+           ^^^^^^^^^^^^
+sync_app.py:17: in main
+    raise NotImplementedError
+E   NotImplementedError
+___________________ test_http_pagination_and_existing_query ___________________
+..\..\..\public_tests\test_sync.py:69: in test_http_pagination_and_existing_query
+    assert app.fetch_http_page("https://example.test/items?key=value", "a b") == {"items": [], "next_cursor": None}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:9: in fetch_http_page
+    raise NotImplementedError
+E   NotImplementedError
+__________________ test_http_error_classification[429-True] ___________________
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:9: in fetch_http_page
+    raise NotImplementedError
+E   NotImplementedError
+__________________ test_http_error_classification[500-True] ___________________
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:9: in fetch_http_page
+    raise NotImplementedError
+E   NotImplementedError
+__________________ test_http_error_classification[503-True] ___________________
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:9: in fetch_http_page
+    raise NotImplementedError
+E   NotImplementedError
+__________________ test_http_error_classification[404-False] __________________
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:9: in fetch_http_page
+    raise NotImplementedError
+E   NotImplementedError
+____________________ test_http_network_error_is_transient _____________________
+..\..\..\public_tests\test_sync.py:92: in test_http_network_error_is_transient
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:9: in fetch_http_page
+    raise NotImplementedError
+E   NotImplementedError
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs0] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs1] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs2] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs3] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+_________________ test_exhausted_retries_do_not_create_table __________________
+..\..\..\public_tests\test_sync.py:106: in test_exhausted_retries_do_not_create_table
+    app.sync(db, fetch, lambda _: None, max_attempts=2)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+________________________ test_bad_page_rejected[None] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+________________________ test_bad_page_rejected[bad1] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+________________________ test_bad_page_rejected[bad2] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+________________________ test_bad_page_rejected[bad3] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+________________________ test_bad_page_rejected[bad4] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+_______________________ test_bad_record_rejected[None] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+_______________________ test_bad_record_rejected[bad1] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+_______________________ test_bad_record_rejected[bad2] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+_______________________ test_bad_record_rejected[bad3] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+____________________ test_active_transaction_is_preserved _____________________
+..\..\..\public_tests\test_sync.py:127: in test_active_transaction_is_preserved
+    app.sync(db, Mock(), lambda _: None)
+sync_app.py:13: in sync
+    raise NotImplementedError
+E   NotImplementedError
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:136: in test_cli_success_and_failure
+    assert app.main([]) == 0
+           ^^^^^^^^^^^^
+sync_app.py:17: in main
+    raise NotImplementedError
+E   NotImplementedError
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py       8      0   100%
+---------------------------------
+TOTAL             8      0   100%
+Required test coverage of 90% reached. Total coverage: 100.00%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_invalid_later_page_leaves_database_unchanged
+FAILED ..\..\..\public_tests\test_sync.py::test_repeated_cursor_rejected - No...
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_requires_configuration - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_http_pagination_and_existing_query
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[429-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[500-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[503-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[404-False]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_network_error_is_transient
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs0]
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs1]
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs2]
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs3]
+FAILED ..\..\..\public_tests\test_sync.py::test_exhausted_retries_do_not_create_table
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[None] - Not...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad1] - Not...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad2] - Not...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad3] - Not...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad4] - Not...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[None] - N...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad1] - N...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad2] - N...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad3] - N...
+FAILED ..\..\..\public_tests\test_sync.py::test_active_transaction_is_preserved
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - Not...
+27 failed in 0.54s

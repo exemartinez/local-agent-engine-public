@@ -1,0 +1,1 @@
+model,configuration,repetition,actual_input_tokens,actual_output_tokens,ttft_s,tpot_s,itl_s,e2e_s,prefill_tokens_s,generated_tokens_s,peak_vram_mib,peak_system_ram_mib,cpu_pct,gpu_w,gpu_c

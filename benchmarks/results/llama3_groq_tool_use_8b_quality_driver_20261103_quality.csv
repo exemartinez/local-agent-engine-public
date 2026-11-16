@@ -1,0 +1,7 @@
+model,case,attempt,status,error,response_s,actual_input_tokens,actual_output_tokens,generated_tokens_s
+llama3-groq-tool-use:8b,mean,0,pass,,8.10373360000085,46,31,82.48388238330526
+llama3-groq-tool-use:8b,mean,1,pass,,0.4183461999928113,46,31,83.82955018685877
+llama3-groq-tool-use:8b,slugify,0,fail,generated code contains a forbidden construct,,,,
+llama3-groq-tool-use:8b,slugify,1,fail,generated code contains a forbidden construct,,,,
+llama3-groq-tool-use:8b,merge_intervals,0,fail,generated code contains a forbidden construct,,,,
+llama3-groq-tool-use:8b,merge_intervals,1,fail,generated code contains a forbidden construct,,,,

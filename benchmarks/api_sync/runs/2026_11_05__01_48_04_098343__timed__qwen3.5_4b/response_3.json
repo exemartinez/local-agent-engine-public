@@ -1,0 +1,18 @@
+{
+  "model": "qwen3.5:4b",
+  "created_at": "2026-11-05T04:50:35.0584316Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nimport argparse\nimport json\nimport math\nimport os\nimport sqlite3\nimport sys\nimport urllib.request\nfrom urllib.error import HTTPError, URLError\nfrom urllib.parse import parse_qs, urlsplit\n\n\nclass TransientError(Exception):\n    \"\"\"Raised for transient failures that should be retried.\"\"\"\n    pass\n\n\ndef validate_config(max_attempts: int, base_delay: float) -> None:\n    \"\"\"Validate retry configuration parameters.\"\"\"\n    if isinstance(max_attempts, bool):\n        raise ValueError(\"max_attempts must be a positive integer, not a boolean\")\n    if not isinstance(max_attempts, int) or max_attempts <= 0:\n        raise ValueError(\"max_attempts must be a positive integer\")\n\n    if isinstance(base_delay, bool):\n        raise ValueError(\"base_delay must be a nonnegative finite number, not a boolean\")\n    if not isinstance(base_delay, (int, float)):\n        raise ValueError(\"base_delay must be a nonnegative finite number\")\n    if base_delay < 0:\n        raise ValueError(\"base_delay must be a nonnegative finite number\")\n    if not math.isfinite(base"
+  },
+  "done": true,
+  "done_reason": "length",
+  "total_duration": 5644962600,
+  "load_duration": 6501600,
+  "prompt_eval_count": 7955,
+  "prompt_eval_cached_count": 1827,
+  "prompt_eval_duration": 2736903000,
+  "eval_count": 237,
+  "eval_duration": 2847411000,
+  "response": "```python\nimport argparse\nimport json\nimport math\nimport os\nimport sqlite3\nimport sys\nimport urllib.request\nfrom urllib.error import HTTPError, URLError\nfrom urllib.parse import parse_qs, urlsplit\n\n\nclass TransientError(Exception):\n    \"\"\"Raised for transient failures that should be retried.\"\"\"\n    pass\n\n\ndef validate_config(max_attempts: int, base_delay: float) -> None:\n    \"\"\"Validate retry configuration parameters.\"\"\"\n    if isinstance(max_attempts, bool):\n        raise ValueError(\"max_attempts must be a positive integer, not a boolean\")\n    if not isinstance(max_attempts, int) or max_attempts <= 0:\n        raise ValueError(\"max_attempts must be a positive integer\")\n\n    if isinstance(base_delay, bool):\n        raise ValueError(\"base_delay must be a nonnegative finite number, not a boolean\")\n    if not isinstance(base_delay, (int, float)):\n        raise ValueError(\"base_delay must be a nonnegative finite number\")\n    if base_delay < 0:\n        raise ValueError(\"base_delay must be a nonnegative finite number\")\n    if not math.isfinite(base"
+}

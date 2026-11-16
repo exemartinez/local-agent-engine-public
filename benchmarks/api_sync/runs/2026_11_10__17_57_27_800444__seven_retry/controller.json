@@ -1,0 +1,49 @@
+{
+  "status": "blocked_disk",
+  "source_queue": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_09__01_26_42_255477__multi-model__windows_queue\\queue.json",
+  "models": [
+    {
+      "model": "GPT-OSS 20B",
+      "quantization": "Q3_K_M",
+      "prior_status": "resource_guard",
+      "status": "pending"
+    },
+    {
+      "model": "GPT-OSS 20B",
+      "quantization": "Q4_K_M",
+      "prior_status": "skipped_memory_estimate",
+      "status": "pending"
+    },
+    {
+      "model": "Qwen3-Coder 30B-A3B",
+      "quantization": "Q3_K_S",
+      "prior_status": "resource_guard",
+      "status": "pending"
+    },
+    {
+      "model": "GLM-4.7-Flash 30B-A3B",
+      "quantization": "Q3_K_S",
+      "prior_status": "skipped_memory_estimate",
+      "status": "pending"
+    },
+    {
+      "model": "GLM-4.7-Flash 30B-A3B",
+      "quantization": "Q2_K",
+      "prior_status": "resource_guard",
+      "status": "pending"
+    },
+    {
+      "model": "GLM-4.7-Flash 30B-A3B",
+      "quantization": "Q4_K_M",
+      "prior_status": "resource_guard",
+      "status": "pending"
+    },
+    {
+      "model": "Qwen3.5 35B-A3B",
+      "quantization": "Q4_K_M",
+      "prior_status": "resource_guard",
+      "status": "pending"
+    }
+  ],
+  "reason": "GPT-OSS 20B Q3_K_M: 6.95 GB free; at least 22.03 GB required including reserve."
+}

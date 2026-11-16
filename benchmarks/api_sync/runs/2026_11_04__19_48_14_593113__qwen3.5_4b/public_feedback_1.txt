@@ -1,0 +1,1 @@
+The initial output reached the 4096-token limit before producing implementation code; the extracted module is empty and all 27 public tests fail with missing functions and TransientError. Return a complete concise Python module satisfying the specification, without reasoning or Markdown.

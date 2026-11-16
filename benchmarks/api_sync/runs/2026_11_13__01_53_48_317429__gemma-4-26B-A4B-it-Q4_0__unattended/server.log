@@ -1,0 +1,21 @@
+0.01.914.511 I srv  llama_server: initializing ...
+0.01.914.899 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.01.924.514 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.01.935.447 I srv    load_model: loading model 'C:\workspace\local-agent-engine\benchmarks\api_sync\model-downloads\gemma-4-26B-A4B-it-Q4_0.gguf'
+0.07.926.730 W load: control-looking token:     50 '<|tool_response>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.07.926.803 W load: control-looking token:    212 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.07.982.241 W load: '</s>' is a normal token here, removing it from EOG list
+0.08.034.365 W llama_model_loader: tensor overrides to CPU are used with mmap enabled - consider using --load-mode none for better performance
+0.20.734.876 W resolve_fused_ops: layer 0 is assigned to device Vulkan0 but Flash Attention over K/V rows is assigned to device CPU (usually due to missing support)
+0.20.734.881 W resolve_fused_ops: Flash Attention over K/V rows not supported, set to disabled
+0.20.771.415 I cmn          init: llama threadpool init, n_threads = 8
+0.32.099.305 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+0.32.126.755 I srv  server_run_i: model loaded
+0.32.126.787 I srv  server_on_li: listening on http://127.0.0.1:18080
+0.32.258.274 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+0.32.259.322 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.37.430.346 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =      8, progress = 0.00, t =   5.17 s / 1.55 tokens per second
+1.19.976.117 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2056, progress = 0.69, t =  47.72 s / 43.09 tokens per second
+1.22.520.299 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2474, progress = 0.83, t =  50.26 s / 49.22 tokens per second
+1.25.485.072 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2986, progress = 1.00, t =  53.23 s / 56.10 tokens per second
+1.32.958.133 I slot print_timing: id  0 | task 0 | n_gen =    100, tg =  15.47 t/s, tg_3s =  15.62 t/s

@@ -1,0 +1,183 @@
+FFFFFFFFFFF.F.FFFFFFFFFFFFF
+ERROR: Coverage failure: total of 42 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+____________________ test_paginated_upsert_and_idempotency ____________________
+..\..\..\public_tests\test_sync.py:26: in test_paginated_upsert_and_idempotency
+    assert app.sync(db, fetch, lambda _: None) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+_______________________ test_retry_per_page_and_backoff _______________________
+..\..\..\public_tests\test_sync.py:35: in test_retry_per_page_and_backoff
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+______________ test_invalid_later_page_leaves_database_unchanged ______________
+..\..\..\public_tests\test_sync.py:45: in test_invalid_later_page_leaves_database_unchanged
+    app.sync(db, lambda _: next(pages), lambda _: None)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+________________________ test_repeated_cursor_rejected ________________________
+..\..\..\public_tests\test_sync.py:51: in test_repeated_cursor_rejected
+    app.sync(db, lambda _: {"items": [], "next_cursor": "same"}, lambda _: None)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+_______________________ test_cli_requires_configuration _______________________
+..\..\..\public_tests\test_sync.py:57: in test_cli_requires_configuration
+    assert app.main([]) == 2
+           ^^^^^^^^^^^^
+E   TypeError: main() takes 0 positional arguments but 1 was given
+___________________ test_http_pagination_and_existing_query ___________________
+..\..\..\public_tests\test_sync.py:69: in test_http_pagination_and_existing_query
+    assert app.fetch_http_page("https://example.test/items?key=value", "a b") == {"items": [], "next_cursor": None}
+           ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'fetch_http_page'
+__________________ test_http_error_classification[429-True] ___________________
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+    ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'fetch_http_page'
+__________________ test_http_error_classification[500-True] ___________________
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+    ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'fetch_http_page'
+__________________ test_http_error_classification[503-True] ___________________
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+    ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'fetch_http_page'
+__________________ test_http_error_classification[404-False] __________________
+..\..\..\public_tests\test_sync.py:84: in test_http_error_classification
+    app.fetch_http_page("https://example.test", None)
+    ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'fetch_http_page'
+____________________ test_http_network_error_is_transient _____________________
+..\..\..\public_tests\test_sync.py:92: in test_http_network_error_is_transient
+    app.fetch_http_page("https://example.test", None)
+    ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'sync_app' has no attribute 'fetch_http_page'
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs1] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs3] ___________
+..\..\..\public_tests\test_sync.py:99: in test_bad_retry_configuration_fails_before_fetch
+    app.sync(db, fetch, lambda _: None, **kwargs)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+_________________ test_exhausted_retries_do_not_create_table __________________
+..\..\..\public_tests\test_sync.py:106: in test_exhausted_retries_do_not_create_table
+    app.sync(db, fetch, lambda _: None, max_attempts=2)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+________________________ test_bad_page_rejected[None] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+________________________ test_bad_page_rejected[bad1] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+________________________ test_bad_page_rejected[bad2] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+________________________ test_bad_page_rejected[bad3] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+________________________ test_bad_page_rejected[bad4] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+_______________________ test_bad_record_rejected[None] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+_______________________ test_bad_record_rejected[bad1] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+_______________________ test_bad_record_rejected[bad2] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+_______________________ test_bad_record_rejected[bad3] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+____________________ test_active_transaction_is_preserved _____________________
+..\..\..\public_tests\test_sync.py:127: in test_active_transaction_is_preserved
+    app.sync(db, Mock(), lambda _: None)
+sync_app.py:47: in sync
+    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+E   sqlite3.OperationalError: no such table: items
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:135: in test_cli_success_and_failure
+    monkeypatch.setattr(app, "fetch_http_page", Mock(return_value={"items": [item("a")], "next_cursor": None}))
+E   AttributeError: <module 'sync_app' from 'C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_05__01_51_04_469352__timed__lfm2.5_8b\\attempt_3\\sync_app.py'> has no attribute 'fetch_http_page'
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py      74     43    42%
+---------------------------------
+TOTAL            74     43    42%
+FAIL Required test coverage of 90% not reached. Total coverage: 41.89%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_invalid_later_page_leaves_database_unchanged
+FAILED ..\..\..\public_tests\test_sync.py::test_repeated_cursor_rejected - sq...
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_requires_configuration - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_http_pagination_and_existing_query
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[429-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[500-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[503-True]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_error_classification[404-False]
+FAILED ..\..\..\public_tests\test_sync.py::test_http_network_error_is_transient
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs1]
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs3]
+FAILED ..\..\..\public_tests\test_sync.py::test_exhausted_retries_do_not_create_table
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[None] - sql...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad1] - sql...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad2] - sql...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad3] - sql...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad4] - sql...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[None] - s...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad1] - s...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad2] - s...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad3] - s...
+FAILED ..\..\..\public_tests\test_sync.py::test_active_transaction_is_preserved
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - Att...
+25 failed, 2 passed in 0.55s

@@ -1,0 +1,1 @@
+Harness smoke test: first response was the failing skeleton; second was the reviewed reference implementation. No model was called. Exclude from model comparisons.

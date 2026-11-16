@@ -1,0 +1,78 @@
+....FFFF.FFF                                                             [100%]
+================================== FAILURES ===================================
+_ test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z] _
+..\..\..\hidden_tests\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+_ test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00] _
+..\..\..\hidden_tests\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+_ test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z] _
+..\..\..\hidden_tests\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+__________________ test_all_server_errors_are_retryable[501] __________________
+..\..\..\hidden_tests\test_acceptance.py:65: in test_all_server_errors_are_retryable
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:34: in fetch_http_page
+    response = urllib.request.urlopen(new_url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1198: in _execute_mock_call
+    raise effect
+E   urllib.error.HTTPError: HTTP Error 501: failed
+__________________ test_all_server_errors_are_retryable[504] __________________
+..\..\..\hidden_tests\test_acceptance.py:65: in test_all_server_errors_are_retryable
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:34: in fetch_http_page
+    response = urllib.request.urlopen(new_url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1198: in _execute_mock_call
+    raise effect
+E   urllib.error.HTTPError: HTTP Error 504: failed
+__________________ test_all_server_errors_are_retryable[599] __________________
+..\..\..\hidden_tests\test_acceptance.py:65: in test_all_server_errors_are_retryable
+    app.fetch_http_page("https://example.test", None)
+sync_app.py:34: in fetch_http_page
+    response = urllib.request.urlopen(new_url)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1198: in _execute_mock_call
+    raise effect
+E   urllib.error.HTTPError: HTTP Error 599: failed
+_______________ test_infinite_retry_delay_rejected_before_fetch _______________
+..\..\..\hidden_tests\test_acceptance.py:73: in test_infinite_retry_delay_rejected_before_fetch
+    fetch.assert_not_called()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:910: in assert_not_called
+    raise AssertionError(msg)
+E   AssertionError: Expected 'mock' to not have been called. Called 1 times.
+E   Calls: [call(None)].
+=========================== short test summary info ===========================
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[501]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[504]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_all_server_errors_are_retryable[599]
+FAILED ..\..\..\hidden_tests\test_acceptance.py::test_infinite_retry_delay_rejected_before_fetch
+7 failed, 5 passed in 0.38s

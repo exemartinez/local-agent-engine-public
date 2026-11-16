@@ -1,0 +1,87 @@
+FFFF..............F.F..FF.F
+ERROR: Coverage failure: total of 82 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+____________________ test_paginated_upsert_and_idempotency ____________________
+..\..\..\public_tests\test_sync.py:26: in test_paginated_upsert_and_idempotency
+    assert app.sync(db, fetch, lambda _: None) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:129: in sync
+    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}', updated_at):
+           ^^
+E   NameError: name 're' is not defined. Did you forget to import 're'
+_______________________ test_retry_per_page_and_backoff _______________________
+..\..\..\public_tests\test_sync.py:35: in test_retry_per_page_and_backoff
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:129: in sync
+    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}', updated_at):
+           ^^
+E   NameError: name 're' is not defined. Did you forget to import 're'
+______________ test_invalid_later_page_leaves_database_unchanged ______________
+..\..\..\public_tests\test_sync.py:45: in test_invalid_later_page_leaves_database_unchanged
+    app.sync(db, lambda _: next(pages), lambda _: None)
+sync_app.py:129: in sync
+    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}', updated_at):
+           ^^
+E   NameError: name 're' is not defined. Did you forget to import 're'
+________________________ test_repeated_cursor_rejected ________________________
+..\..\..\public_tests\test_sync.py:51: in test_repeated_cursor_rejected
+    app.sync(db, lambda _: {"items": [], "next_cursor": "same"}, lambda _: None)
+sync_app.py:144: in sync
+    cursor_sql.executemany(upsert_sql, records_to_insert)
+E   sqlite3.OperationalError: no such table: records
+________________________ test_bad_page_rejected[bad2] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:144: in sync
+    cursor_sql.executemany(upsert_sql, records_to_insert)
+E   sqlite3.OperationalError: no such table: records
+________________________ test_bad_page_rejected[bad4] _________________________
+..\..\..\public_tests\test_sync.py:114: in test_bad_page_rejected
+    app.sync(db, lambda _: bad, lambda _: None)
+sync_app.py:144: in sync
+    cursor_sql.executemany(upsert_sql, records_to_insert)
+E   sqlite3.OperationalError: no such table: records
+_______________________ test_bad_record_rejected[bad2] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:129: in sync
+    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}', updated_at):
+           ^^
+E   NameError: name 're' is not defined. Did you forget to import 're'
+_______________________ test_bad_record_rejected[bad3] ________________________
+..\..\..\public_tests\test_sync.py:120: in test_bad_record_rejected
+    app.sync(db, lambda _: {"items": [bad], "next_cursor": None}, lambda _: None)
+sync_app.py:129: in sync
+    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}', updated_at):
+           ^^
+E   NameError: name 're' is not defined. Did you forget to import 're'
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:136: in test_cli_success_and_failure
+    assert app.main([]) == 0
+E   assert 1 == 0
+E    +  where 1 = <function main at 0x000002C6025AF600>([])
+E    +    where <function main at 0x000002C6025AF600> = app.main
+---------------------------- Captured stderr call -----------------------------
+Sync failed: name 're' is not defined
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py     148     26    82%
+---------------------------------
+TOTAL           148     26    82%
+FAIL Required test coverage of 90% not reached. Total coverage: 82.43%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_invalid_later_page_leaves_database_unchanged
+FAILED ..\..\..\public_tests\test_sync.py::test_repeated_cursor_rejected - sq...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad2] - sql...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_page_rejected[bad4] - sql...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad2] - N...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad3] - N...
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - ass...
+9 failed, 18 passed in 0.51s

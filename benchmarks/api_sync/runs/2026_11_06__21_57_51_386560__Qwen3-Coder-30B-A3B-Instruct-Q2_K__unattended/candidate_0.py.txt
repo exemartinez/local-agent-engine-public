@@ -1,0 +1,169 @@
+import sqlite3
+import json
+import urllib.request
+import urllib.parse
+from urllib.error import HTTPError, URLError
+import os
+import sys
+import logging
+
+class TransientError(Exception):
+    pass
+
+def fetch_http_page(url, cursor):
+    if cursor is not None:
+        parsed = urllib.parse.urlparse(url)
+        query_params = urllib.parse.parse_qs(parsed.query)
+        query_params['cursor'] = [cursor]
+        new_query = urllib.parse.urlencode(query_params, doseq=True)
+        new_url = urllib.parse.urlunparse((
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            new_query,
+            parsed.fragment
+        ))
+    else:
+        new_url = url
+
+    req = urllib.request.Request(new_url)
+    req.add_header('Accept', 'application/json')
+    try:
+        with urllib.request.urlopen(req) as response:
+            return json.loads(response.read().decode('utf-8'))
+    except HTTPError as e:
+        if e.code in (429, 500, 503):
+            raise TransientError() from e
+        raise
+    except URLError:
+        raise TransientError()
+
+def sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None):
+    if not isinstance(max_attempts, int) or max_attempts <= 0 or isinstance(max_attempts, bool):
+        raise ValueError("max_attempts must be a positive integer")
+    if not isinstance(base_delay, (int, float)) or base_delay < 0 or not (isinstance(base_delay, (int, float)) and not str(base_delay).lower() in ('nan', 'inf')):
+        raise ValueError("base_delay must be a nonnegative finite number")
+
+    if connection.in_transaction:
+        raise ValueError("Database transaction is already active")
+
+    pages = []
+    cursor = None
+    seen_cursors = set()
+
+    for attempt in range(max_attempts):
+        try:
+            page = fetch_page(cursor)
+            if not isinstance(page, dict):
+                raise ValueError("Invalid page structure")
+            if "items" not in page or "next_cursor" not in page:
+                raise ValueError("Page missing required keys")
+            if not isinstance(page["items"], list):
+                raise ValueError("Items must be a list")
+            if page["next_cursor"] is not None and not isinstance(page["next_cursor"], str):
+                raise ValueError("next_cursor must be null or a nonempty string")
+            if page["next_cursor"] in seen_cursors:
+                raise ValueError("Repeated cursor detected")
+            seen_cursors.add(cursor)
+            pages.append(page)
+            cursor = page["next_cursor"]
+            if cursor is None:
+                break
+        except TransientError as e:
+            if attempt < max_attempts - 1:
+                sleep(base_delay * 2 ** attempt)
+                continue
+            raise
+        except Exception:
+            raise
+
+    # Validate all items
+    records = []
+    seen_ids = set()
+    for page in pages:
+        for item in page["items"]:
+            if not isinstance(item, dict):
+                raise ValueError("Invalid item structure")
+            if "id" not in item or not isinstance(item["id"], str) or not item["id"]:
+                raise ValueError("Item missing valid id")
+            if "name" not in item or not isinstance(item["name"], str) or not item["name"]:
+                raise ValueError("Item missing valid name")
+            if "updated_at" not in item or not isinstance(item["updated_at"], str) or not item["updated_at"]:
+                raise ValueError("Item missing valid updated_at")
+            if item["id"] in seen_ids:
+                # Already seen, will be overwritten by later occurrence
+                pass
+            seen_ids.add(item["id"])
+            records.append((item["id"], item["name"], item["updated_at"]))
+
+    # Perform the transaction
+    try:
+        with connection:
+            connection.execute("""
+                CREATE TABLE IF NOT EXISTS records (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            connection.execute("DELETE FROM records")
+            connection.executemany("""
+                INSERT OR REPLACE INTO records (id, name, updated_at)
+                VALUES (?, ?, ?)
+            """, records)
+            return len(records)
+    except Exception:
+        # Transaction was rolled back automatically
+        raise
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+
+    # Parse arguments
+    args = {}
+    i = 0
+    while i < len(argv):
+        if argv[i] == "--url":
+            args["url"] = argv[i+1]
+            i += 2
+        elif argv[i] == "--db":
+            args["db"] = argv[i+1]
+            i += 2
+        elif argv[i] == "--max-attempts":
+            args["max_attempts"] = argv[i+1]
+            i += 2
+        elif argv[i] == "--base-delay":
+            args["base_delay"] = argv[i+1]
+            i += 2
+        else:
+            print(f"Unknown argument: {argv[i]}", file=sys.stderr)
+            return 2
+
+    # Get environment variables
+    url = args.get("url", os.environ.get("SYNC_URL"))
+    db_path = args.get("db", os.environ.get("SYNC_DB"))
+    max_attempts = int(args.get("max_attempts", os.environ.get("SYNC_MAX_ATTEMPTS", 3)))
+    base_delay = float(args.get("base_delay", os.environ.get("SYNC_BASE_DELAY", 0.1)))
+
+    if not url or not db_path:
+        print("SYNC_URL and SYNC_DB must be set", file=sys.stderr)
+        return 2
+
+    try:
+        connection = sqlite3.connect(db_path)
+        def fetch_page(cursor):
+            return fetch_http_page(url, cursor)
+        def sleep(seconds):
+            import time
+            time.sleep(seconds)
+        result = sync(connection, fetch_page, sleep, max_attempts=max_attempts, base_delay=base_delay)
+        connection.close()
+        return 0
+    except TransientError:
+        print("Transient error during sync", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Sync failed: {e}", file=sys.stderr)
+        return 1

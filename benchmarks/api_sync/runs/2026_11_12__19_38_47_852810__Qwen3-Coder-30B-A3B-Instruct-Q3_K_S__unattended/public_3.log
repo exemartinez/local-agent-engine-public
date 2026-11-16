@@ -1,0 +1,27 @@
+.......................FF..
+ERROR: Coverage failure: total of 87 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+_______________________ test_bad_record_rejected[bad2] ________________________
+..\..\..\public_tests\test_sync.py:119: in test_bad_record_rejected
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+_______________________ test_bad_record_rejected[bad3] ________________________
+..\..\..\public_tests\test_sync.py:119: in test_bad_record_rejected
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py     152     20    87%
+---------------------------------
+TOTAL           152     20    87%
+FAIL Required test coverage of 90% not reached. Total coverage: 86.84%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad2] - F...
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_record_rejected[bad3] - F...
+2 failed, 25 passed in 0.33s

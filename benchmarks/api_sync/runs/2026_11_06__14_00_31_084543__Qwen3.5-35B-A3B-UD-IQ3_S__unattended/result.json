@@ -1,0 +1,76 @@
+{
+  "status": "fail",
+  "calls": [
+    {
+      "seconds": 230.90600000001723,
+      "usage": {
+        "completion_tokens": 4369,
+        "prompt_tokens": 2677,
+        "total_tokens": 7046,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2677,
+        "prompt_ms": 46848.839,
+        "prompt_per_token_ms": 17.500500186776243,
+        "prompt_per_second": 57.14122392659507,
+        "predicted_n": 4369,
+        "predicted_ms": 184023.789,
+        "predicted_per_token_ms": 42.12998832417582,
+        "predicted_per_second": 23.736061645812544
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "seconds": 210.89100000000326,
+      "usage": {
+        "completion_tokens": 4490,
+        "prompt_tokens": 5238,
+        "total_tokens": 9728,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 5238,
+        "prompt_ms": 25182.964,
+        "prompt_per_token_ms": 4.807744177166858,
+        "prompt_per_second": 207.99775594326388,
+        "predicted_n": 4490,
+        "predicted_ms": 185441.146,
+        "predicted_per_token_ms": 41.31012385832034,
+        "predicted_per_second": 24.20714117027728
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "public_checks": [
+    {
+      "exit_code": 1,
+      "output": ".......................FF..                                              [100%]\n================================== FAILURES ===================================\n_______________________ test_bad_record_rejected[bad2] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_______________________ test_bad_record_rejected[bad3] ________________________\n..\\..\\..\\public_tests\\test_sync.py:119: in test_bad_record_rejected\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     146     12    92%\n---------------------------------\nTOTAL           146     12    92%\nRequired test coverage of 90% reached. Total coverage: 91.78%\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad2] - F...\nFAILED ..\\..\\..\\public_tests\\test_sync.py::test_bad_record_rejected[bad3] - F...\n2 failed, 25 passed in 0.40s\n",
+      "seconds": 1.7660000000032596
+    },
+    {
+      "exit_code": 0,
+      "output": "...........................                                              [100%]\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.10-final-0 _______________\n\nName          Stmts   Miss  Cover\n---------------------------------\nsync_app.py     153     13    92%\n---------------------------------\nTOTAL           153     13    92%\nRequired test coverage of 90% reached. Total coverage: 91.50%\n27 passed in 0.36s\n",
+      "seconds": 1.562999999994645
+    }
+  ],
+  "hidden_check": {
+    "exit_code": 1,
+    "output": "F...FFF....F                                                             [100%]\n================================== FAILURES ===================================\n________________ test_database_failure_rolls_back_all_changes _________________\n..\\..\\..\\hidden_tests\\test_acceptance.py:18: in test_database_failure_rolls_back_all_changes\n    assert db.execute(\"SELECT id, name FROM records\").fetchall() == [(\"old\", \"original\")]\nE   AssertionError: assert [('old', 'changed')] == [('old', 'original')]\nE     \nE     At index 0 diff: ('old', 'changed') != ('old', 'original')\nE     Use -v to get more diff\n_ test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z] _\n..\\..\\..\\hidden_tests\\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_ test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00] _\n..\\..\\..\\hidden_tests\\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_ test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z] _\n..\\..\\..\\hidden_tests\\test_acceptance.py:52: in test_invalid_calendar_dates_rejected_without_creating_table\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_______________ test_infinite_retry_delay_rejected_before_fetch _______________\n..\\..\\..\\hidden_tests\\test_acceptance.py:73: in test_infinite_retry_delay_rejected_before_fetch\n    fetch.assert_not_called()\nC:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\unittest\\mock.py:910: in assert_not_called\n    raise AssertionError(msg)\nE   AssertionError: Expected 'mock' to not have been called. Called 1 times.\nE   Calls: [call(None)].\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_database_failure_rolls_back_all_changes\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-02-30T12:00:00Z]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-13-01T12:00:00+00:00]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_invalid_calendar_dates_rejected_without_creating_table[2026-01-01T25:00:00Z]\nFAILED ..\\..\\..\\hidden_tests\\test_acceptance.py::test_infinite_retry_delay_rejected_before_fetch\n5 failed, 7 passed in 0.36s\n",
+    "seconds": 1.2030000000086147
+  },
+  "model": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\model-downloads\\Qwen3.5-35B-A3B-UD-IQ3_S.gguf",
+  "manual_interventions": 0,
+  "model_cleanup": "not requested",
+  "context_tokens": 16384,
+  "reasoning_budget_tokens": 2048,
+  "test_environment": "Windows host with AST gate and Python socket guard; NOT an OS sandbox",
+  "model_sha256": "ca6e9542e9f9e34f28d59e1e335b3629825daf30a4c0b5c1ec9d2f898c061fb6",
+  "elapsed_seconds": 523.953
+}

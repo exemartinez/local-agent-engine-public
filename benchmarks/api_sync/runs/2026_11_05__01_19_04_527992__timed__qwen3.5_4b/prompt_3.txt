@@ -1,0 +1,300 @@
+Return the full corrected sync_app.py as Python code only.
+
+# API-to-SQLite synchronization specification
+
+## Contract
+
+Implement `sync_app.py` using Python's standard library. Expose `sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None) -> int`, `fetch_http_page(url, cursor)`, and `main(argv=None) -> int`. The model may add helpers but must preserve these signatures. `connection` is a `sqlite3.Connection`; `fetch_page(cursor)` returns a decoded page dictionary. `sleep(seconds)` is injectable. The sync result is the number of unique records committed.
+
+Each page has exactly the required keys `items` (list) and `next_cursor` (null or a nonempty string). An item is a dictionary with `id` (nonempty string), `name` (nonempty string), and `updated_at` (nonempty ISO 8601 timestamp including a timezone). Preserve the timestamp text. Extra page or item keys are permitted and ignored. Duplicate IDs across pages are resolved by the last occurrence in fetch order.
+
+Fetch the first page using cursor `None`, then follow `next_cursor` until null. Detect a repeated cursor and raise `ValueError`. Invalid pages or records raise `ValueError`. All pages must be validated before any persistent database change. Upsert into `records(id TEXT PRIMARY KEY, name TEXT NOT NULL, updated_at TEXT NOT NULL)` in one transaction; repeated runs must not duplicate rows. A failed fetch, validation, or database operation leaves the database as it was before the call, including if the table did not previously exist. Do not commit or roll back a transaction already owned by the caller: reject an already-active transaction with `ValueError` before fetching.
+
+Define `TransientError` for retryable fetch failures. Retry each individual page at most `max_attempts` total calls, sleeping `base_delay * 2**(attempt-1)` after each non-final `TransientError`. Other exceptions propagate immediately. Validate `max_attempts` is a positive integer excluding booleans and `base_delay` is a nonnegative finite number before fetching. Log successful completion without logging credentials or record contents.
+
+`fetch_http_page` performs a GET using `urllib.request`, appending a URL-encoded `cursor` query parameter only when cursor is not null, preserving existing query parameters. It decodes UTF-8 JSON. HTTP 429, HTTP 5xx, and `urllib.error.URLError` raise `TransientError`; other HTTP errors propagate. No network access is needed in tests.
+
+CLI: `--url` and `--db` override `SYNC_URL` and `SYNC_DB` environment variables; both are required. `--max-attempts` and `--base-delay` override `SYNC_MAX_ATTEMPTS` and `SYNC_BASE_DELAY`, defaults 3 and 0.1. `main` returns 0 on success, 2 for invalid configuration, 1 for sync failure, and writes useful diagnostics to stderr. Running the file directly exits with that code. Do not log the URL because it may contain credentials.
+
+## Acceptance
+
+Public and hidden tests must pass; line coverage of `sync_app.py` must be at least 90%. Tests must mock all HTTP requests and sleeps, and use in-memory or temporary SQLite databases. A successful run alone does not establish production readiness.
+
+
+# Design and plan
+
+Use a standard-library-only single module for a fair, bounded generation task. Separate HTTP transport, validation, transaction management, retry policy, and CLI orchestration. Fetch and validate into memory before beginning the database transaction; use parameterized SQLite statements and an explicit transaction. Test through dependency injection and mocked `urllib.request.urlopen`. Candidate code may choose its internal design while honoring the public signatures and behavior in `spec.md`.
+
+
+# Tasks
+
+1. Implement transport and transient-error classification.
+2. Implement validated pagination, cursor-cycle detection, and bounded retries.
+3. Implement atomic, idempotent SQLite storage and caller-transaction protection.
+4. Implement environment/CLI configuration, exit codes, and safe logging.
+5. Implement and run tests with mocked HTTP and sleep; measure line coverage.
+
+
+CURRENT CODE:
+import argparse
+import json
+import os
+import re
+import sqlite3
+import sys
+from urllib.error import HTTPError, URLError
+from urllib.parse import parse_qs, urlsplit
+from urllib.request import urlopen
+
+
+class TransientError(Exception):
+    """Raised for retryable HTTP or network failures."""
+    pass
+
+
+def fetch_http_page(url: str, cursor) -> dict:
+    """Fetch a page from the API and return decoded JSON."""
+    params = []
+    if cursor is not None:
+        params.append(f"cursor={cursor}")
+
+    full_url = url
+    if params:
+        try:
+            parsed = urlsplit(url)
+            existing_qs = parse_qs(parsed.query)
+            if existing_qs:
+                new_qs_parts = []
+                for k, v in existing_qs.items():
+                    if isinstance(v, list):
+                        new_qs_parts.extend([f"{k}={val}" for val in v])
+                    else:
+                        new_qs_parts.append(f"{k}={v}")
+
+                new_qs_parts.append(params[0])
+                full_url = f"{parsed.scheme}:{parsed.netloc}{parsed.path}?{'&'.join(new_qs_parts)}"
+        except Exception:
+            try:
+                existing = url.split('?')[1] if '?' in url else ""
+                full_url = f"{url}?{existing}&{params[0]}"
+            except Exception:
+                full_url = f"{url}?{params[0]}"
+
+    try:
+        with urlopen(full_url) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            return data
+    except HTTPError as e:
+        if e.code in (429, 500, 501, 502, 503, 504):
+            raise TransientError(f"HTTP {e.code}: {e.reason}") from None
+        raise
+    except URLError as e:
+        raise TransientError(f"Network error: {e.reason}") from None
+
+
+def validate_page(data: dict) -> bool:
+    """Validate page structure."""
+    if not isinstance(data, dict):
+        return False
+    if "items" not in data or not isinstance(data["items"], list):
+        return False
+    if "next_cursor" not in data:
+        return False
+    return True
+
+
+def validate_item(item: dict) -> bool:
+    """Validate item structure."""
+    if not isinstance(item, dict):
+        return False
+    required = ["id", "name", "updated_at"]
+    for key in required:
+        if key not in item or not item[key]:
+            return False
+    return True
+
+
+def validate_records(records: list) -> bool:
+    """Validate all records."""
+    return all(validate_item(r) for r in records)
+
+
+def sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None) -> int:
+    """Synchronize data from API to SQLite."""
+    if not isinstance(max_attempts, int) or max_attempts <= 0 or isinstance(max_attempts, bool):
+        raise ValueError("max_attempts must be a positive integer")
+    if not isinstance(base_delay, (int, float)) or base_delay < 0:
+        raise ValueError("base_delay must be a nonnegative finite number")
+
+    try:
+        cursor = None
+        all_records = []
+        last_cursor = None
+
+        for attempt in range(max_attempts):
+            if attempt > 0:
+                sleep(base_delay * (2 ** (attempt - 1)))
+
+            page_data = fetch_page(cursor)
+            if not validate_page(page_data):
+                raise ValueError("Invalid page structure")
+
+            next_cursor = page_data.get("next_cursor")
+            if next_cursor is None:
+                break
+
+            if next_cursor == last_cursor:
+                raise ValueError("Repeated cursor detected")
+            last_cursor = next_cursor
+
+            for item in page_data["items"]:
+                if not validate_item(item):
+                    raise ValueError("Invalid record structure")
+                all_records.append(item)
+
+            cursor = next_cursor
+
+        if not validate_records(all_records):
+            raise ValueError("Validation failed during record processing")
+
+        with connection:
+            try:
+                existing_ids = {r[0] for r in connection.execute("SELECT id FROM records").fetchall()}
+                new_ids = set()
+                for rec in all_records:
+                    if rec["id"] not in existing_ids:
+                        new_ids.add(rec["id"])
+                        connection.execute(
+                            "INSERT INTO records (id, name, updated_at) VALUES (?, ?, ?)",
+                            (rec["id"], rec["name"], rec["updated_at"]),
+                        )
+                return len(new_ids)
+            except sqlite3.OperationalError:
+                raise ValueError("Database operation failed")
+
+    except TransientError:
+        if attempt < max_attempts - 1:
+            raise
+        raise
+    except Exception as e:
+        raise
+
+
+def main(argv=None):
+    """Main entry point."""
+    parser = argparse.ArgumentParser(description="Sync API to SQLite")
+    parser.add_argument("--url", default=os.environ.get("SYNC_URL"))
+    parser.add_argument("--db", default=os.environ.get("SYNC_DB"))
+    parser.add_argument("--max-attempts", type=int, default=int(os.environ.get("SYNC_MAX_ATTEMPTS", 3)))
+    parser.add_argument("--base-delay", type=float, default=float(os.environ.get("SYNC_BASE_DELAY", 0.1)))
+
+    args = parser.parse_args(argv)
+
+    if not args.url or not args.db:
+        print("Error: --url and --db are required", file=sys.stderr)
+        return 2
+
+    try:
+        conn = sqlite3.connect(args.db)
+        cursor = None
+
+        def fetch_page(c):
+            return fetch_http_page(args.url, c)
+
+        def sleep_func(s):
+            import time
+            time.sleep(s)
+
+        count = sync(conn, fetch_page, sleep_func, max_attempts=args.max_attempts, base_delay=args.base_delay)
+        print(f"Synced {count} records")
+        return 0
+    except Exception as e:
+        if isinstance(e, TransientError):
+            print(f"Transient error after retries: {e}", file=sys.stderr)
+        else:
+            print(f"Sync failed: {e}", file=sys.stderr)
+        return 1
+    finally:
+        conn.close()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+PUBLIC TEST FAILURES:
+FFF...........FF..........F
+ERROR: Coverage failure: total of 87 is less than fail-under=90
+                                                                         [100%]
+================================== FAILURES ===================================
+____________________ test_paginated_upsert_and_idempotency ____________________
+sync_app.py:124: in sync
+    existing_ids = {r[0] for r in connection.execute("SELECT id FROM records").fetchall()}
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   sqlite3.OperationalError: no such table: records
+
+During handling of the above exception, another exception occurred:
+..\..\..\public_tests\test_sync.py:26: in test_paginated_upsert_and_idempotency
+    assert app.sync(db, fetch, lambda _: None) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:135: in sync
+    raise ValueError("Database operation failed")
+E   ValueError: Database operation failed
+_______________________ test_retry_per_page_and_backoff _______________________
+..\..\..\public_tests\test_sync.py:35: in test_retry_per_page_and_backoff
+    assert app.sync(db, fetch, sleep, max_attempts=3, base_delay=0.25) == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sync_app.py:100: in sync
+    page_data = fetch_page(cursor)
+                ^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:1202: in _execute_mock_call
+    raise result
+E   sync_app.TransientError
+______________ test_invalid_later_page_leaves_database_unchanged ______________
+..\..\..\public_tests\test_sync.py:44: in test_invalid_later_page_leaves_database_unchanged
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+__________ test_bad_retry_configuration_fails_before_fetch[kwargs3] ___________
+..\..\..\public_tests\test_sync.py:100: in test_bad_retry_configuration_fails_before_fetch
+    fetch.assert_not_called()
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\unittest\mock.py:910: in assert_not_called
+    raise AssertionError(msg)
+E   AssertionError: Expected 'mock' to not have been called. Called 1 times.
+E   Calls: [call(None)].
+_________________ test_exhausted_retries_do_not_create_table __________________
+..\..\..\public_tests\test_sync.py:107: in test_exhausted_retries_do_not_create_table
+    assert fetch.call_count == 2
+E   AssertionError: assert 1 == 2
+E    +  where 1 = <Mock id='3019831774048'>.call_count
+________________________ test_cli_success_and_failure _________________________
+..\..\..\public_tests\test_sync.py:136: in test_cli_success_and_failure
+    assert app.main([]) == 0
+E   assert 1 == 0
+E    +  where 1 = <function main at 0x000002BF1C016020>([])
+E    +    where <function main at 0x000002BF1C016020> = app.main
+---------------------------- Captured stderr call -----------------------------
+Sync failed: Database operation failed
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+sync_app.py     136     18    87%
+---------------------------------
+TOTAL           136     18    87%
+FAIL Required test coverage of 90% not reached. Total coverage: 86.76%
+=========================== short test summary info ===========================
+FAILED ..\..\..\public_tests\test_sync.py::test_paginated_upsert_and_idempotency
+FAILED ..\..\..\public_tests\test_sync.py::test_retry_per_page_and_backoff - ...
+FAILED ..\..\..\public_tests\test_sync.py::test_invalid_later_page_leaves_database_unchanged
+FAILED ..\..\..\public_tests\test_sync.py::test_bad_retry_configuration_fails_before_fetch[kwargs3]
+FAILED ..\..\..\public_tests\test_sync.py::test_exhausted_retries_do_not_create_table
+FAILED ..\..\..\public_tests\test_sync.py::test_cli_success_and_failure - ass...
+6 failed, 21 passed in 0.45s

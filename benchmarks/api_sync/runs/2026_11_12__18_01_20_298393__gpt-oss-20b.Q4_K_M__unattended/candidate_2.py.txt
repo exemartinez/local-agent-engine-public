@@ -1,0 +1,236 @@
+#!/usr/bin/env python3
+"""
+sync_app.py – API-to-SQLite synchronization
+
+Public API
+----------
+sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None) -> int
+fetch_http_page(url, cursor) -> dict
+main(argv=None) -> int
+"""
+
+import argparse
+import json
+import math
+import os
+import re
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+import sqlite3
+
+# --------------------------------------------------------------------------- #
+# Exceptions
+# --------------------------------------------------------------------------- #
+class TransientError(RuntimeError):
+    """Raised for retryable HTTP/network errors."""
+    pass
+
+# --------------------------------------------------------------------------- #
+# HTTP transport
+# --------------------------------------------------------------------------- #
+# Allow monkeypatching in tests
+urlopen = urllib.request.urlopen
+
+def fetch_http_page(url: str, cursor):
+    """
+    Perform a GET request to *url*, optionally adding a `cursor` query
+    parameter.  Return the decoded JSON dictionary.
+
+    Raises TransientError for HTTP 429, 5xx, or URLError.
+    """
+    # Parse existing URL
+    parts = urllib.parse.urlsplit(url)
+    qs = urllib.parse.parse_qs(parts.query, keep_blank_values=True)
+    if cursor is not None:
+        qs["cursor"] = [cursor]
+    new_query = urllib.parse.urlencode(qs, doseq=True)
+    new_url = urllib.parse.urlunsplit((parts.scheme, parts.netloc, parts.path, new_query, parts.fragment))
+
+    req = urllib.request.Request(new_url, method="GET")
+    try:
+        with urlopen(req) as resp:
+            data = resp.read().decode("utf-8")
+            return json.loads(data)
+    except urllib.error.HTTPError as e:
+        # Retryable status codes
+        if e.code in (429, 500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511):
+            raise TransientError(f"HTTP {e.code}") from e
+        raise
+    except urllib.error.URLError as e:
+        raise TransientError("Network error") from e
+
+# --------------------------------------------------------------------------- #
+# Sync logic
+# --------------------------------------------------------------------------- #
+_timestamp_re = re.compile(r".+([+-]\d{2}:\d{2}|Z)$")
+
+def _validate_timestamp(ts: str):
+    if not isinstance(ts, str) or not ts:
+        raise ValueError("updated_at must be a nonempty string")
+    if not _timestamp_re.match(ts):
+        raise ValueError(f"updated_at '{ts}' missing timezone")
+
+def _validate_item(item):
+    if not isinstance(item, dict):
+        raise ValueError("item must be a dict")
+    for key in ("id", "name", "updated_at"):
+        if key not in item:
+            raise ValueError(f"item missing key {key!r}")
+        val = item[key]
+        if not isinstance(val, str) or not val:
+            raise ValueError(f"{key!r} must be a nonempty string")
+    _validate_timestamp(item["updated_at"])
+
+def _validate_page(page, cursor):
+    if not isinstance(page, dict):
+        raise ValueError("page must be a dict")
+    if "items" not in page or "next_cursor" not in page:
+        raise ValueError("page missing required keys")
+    items = page["items"]
+    next_cursor = page["next_cursor"]
+    if not isinstance(items, list):
+        raise ValueError("items must be a list")
+    if next_cursor is not None and (not isinstance(next_cursor, str) or not next_cursor):
+        raise ValueError("next_cursor must be None or a nonempty string")
+    if cursor in seen_cursors:
+        raise ValueError("repeated cursor detected")
+    seen_cursors.add(cursor)
+    for itm in items:
+        _validate_item(itm)
+    return items, next_cursor
+
+def sync(connection, fetch_page, sleep, *, max_attempts=3, base_delay=0.1, logger=None):
+    """
+    Synchronise API pages into SQLite.
+
+    Parameters
+    ----------
+    connection : sqlite3.Connection
+        Target database.  Must not be in an active transaction.
+    fetch_page : callable(cursor) -> dict
+        Fetch a page dictionary.  May raise TransientError.
+    sleep : callable(seconds) -> None
+        Sleep helper.  May be mocked.
+    max_attempts : int
+        Positive integer >0.
+    base_delay : float
+        Nonnegative finite number.
+    logger : logging.Logger or None
+        Optional logger; not used in tests.
+
+    Returns
+    -------
+    int
+        Number of unique records committed.
+
+    Raises
+    ------
+    ValueError
+        For configuration or validation errors.
+    TransientError
+        If all retry attempts fail for a page.
+    """
+    # Validate configuration
+    if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or max_attempts <= 0:
+        raise ValueError("max_attempts must be a positive integer")
+    if not isinstance(base_delay, (int, float)) or math.isnan(base_delay) or base_delay < 0:
+        raise ValueError("base_delay must be a nonnegative finite number")
+
+    # Reject active transaction
+    if getattr(connection, "in_transaction", False):
+        raise ValueError("connection already in a transaction")
+
+    # Fetch all pages
+    cursor = None
+    global seen_cursors
+    seen_cursors = set()
+    items_dict = {}
+    while True:
+        attempt = 1
+        while attempt <= max_attempts:
+            try:
+                page = fetch_page(cursor)
+                break
+            except TransientError:
+                if attempt == max_attempts:
+                    raise
+                sleep(base_delay * 2 ** (attempt - 1))
+                attempt += 1
+                continue
+        # Validate page
+        items, next_cursor = _validate_page(page, cursor)
+        for itm in items:
+            items_dict[itm["id"]] = itm
+        if next_cursor is None:
+            break
+        cursor = next_cursor
+
+    # All pages validated – perform atomic upsert
+    created_table = False
+    try:
+        connection.execute("BEGIN")
+        # Check if table exists
+        if not connection.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='records'"
+        ).fetchone():
+            connection.execute(
+                "CREATE TABLE records (id TEXT PRIMARY KEY, name TEXT NOT NULL, updated_at TEXT NOT NULL)"
+            )
+            created_table = True
+        # Upsert records
+        for rid, itm in items_dict.items():
+            connection.execute(
+                "INSERT OR REPLACE INTO records (id, name, updated_at) VALUES (?,?,?)",
+                (rid, itm["name"], itm["updated_at"]),
+            )
+        connection.commit()
+        return len(items_dict)
+    except Exception:
+        if created_table:
+            connection.execute("DROP TABLE IF EXISTS records")
+        connection.rollback()
+        raise
+
+# --------------------------------------------------------------------------- #
+# CLI
+# --------------------------------------------------------------------------- #
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Synchronise API to SQLite")
+    parser.add_argument("--url", help="API endpoint")
+    parser.add_argument("--db", help="SQLite database file")
+    parser.add_argument("--max-attempts", dest="max_attempts", help="Maximum attempts per page")
+    parser.add_argument("--base-delay", dest="base_delay", help="Base delay in seconds")
+    args = parser.parse_args(argv)
+
+    # Resolve configuration
+    url = args.url or os.getenv("SYNC_URL")
+    db_path = args.db or os.getenv("SYNC_DB")
+    if not url or not db_path:
+        print("Missing required configuration", file=sys.stderr)
+        return 2
+
+    # Parse numeric options
+    try:
+        max_attempts = int(args.max_attempts) if args.max_attempts is not None else int(os.getenv("SYNC_MAX_ATTEMPTS", 3))
+    except Exception:
+        print("Invalid max_attempts", file=sys.stderr)
+        return 2
+    try:
+        base_delay = float(args.base_delay) if args.base_delay is not None else float(os.getenv("SYNC_BASE_DELAY", 0.1))
+    except Exception:
+        print("Invalid base_delay", file=sys.stderr)
+        return 2
+
+    try:
+        conn = sqlite3.connect(db_path)
+        sync(conn, fetch_http_page, time.sleep, max_attempts=max_attempts, base_delay=base_delay)
+        return 0
+    except Exception as e:
+        print(f"Sync failed: {e}", file=sys.stderr)
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())

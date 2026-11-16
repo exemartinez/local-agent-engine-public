@@ -1,0 +1,4 @@
+model,task,repetition,prompt_tokens,output_tokens,total_s,load_s,generated_tokens_s,result
+qwen2.5-coder:7b,mean_fix,1,59,35,33.771,15.426,4.27,pass_candidate
+qwen2.5-coder:7b,mean_fix,2,59,35,0.458,0.005,80.39,pass_candidate
+qwen2.5-coder:7b,mean_fix,3,59,35,0.472,0.017,79.86,pass_candidate

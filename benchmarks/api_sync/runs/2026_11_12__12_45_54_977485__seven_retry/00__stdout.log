@@ -1,0 +1,5 @@
+{
+  "status": "resource_guard",
+  "run": "C:\\workspace\\local-agent-engine\\benchmarks\\api_sync\\runs\\2026_11_12__12_45_55_213115__GPT-OSS-20B-Q3_K_M__windows_queue",
+  "report": "C:\\workspace\\local-agent-engine\\documentation\\archive\\queue-snapshots\\2026_11_12__12_45_55__moe_quantization_queue.md"
+}
